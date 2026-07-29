@@ -4,12 +4,10 @@ import numpy as np;
 data = pd.read_excel("Data/meta Niloofar 8.10.404.final.xlsx");
 data = data.drop(columns=['Column1', 'N0.']);
 
-
+# Forward fill these categorical features
 data["Author"] = data["Author"].ffill();
 data["Cancer"] = data["Cancer"].ffill();
 data["Cell Line"] = data["Cell Line"].ffill();
-
-# print(data.head())
 
 # 1. Remove all whitespace
 data["Unit"] = data["Unit"].str.replace(r"\s+", "", regex=True);
@@ -23,12 +21,13 @@ data["Unit"] = data["Unit"].str.lower();
 data["Time"] = data["Time"].str.lower();
 
 
-
 print(data["Unit"].unique())
 print(data["Unit"].value_counts())
 
+# Molecular weight of Osthole.
 MW = 244.28;
 
+# The new data (Osthole data) needs unit transformation.
 def to_uM(row):
     if row["Unit"].strip() == "mg/ml":
         return row["Dose"] * 1e6 / MW;
@@ -60,19 +59,20 @@ data.to_csv("Data/cleanedData.csv", index=False);
 
 oldData = pd.read_csv("Data/oldData.csv");
 
-print(oldData.columns);
+# print(oldData.columns);
 
+# Just some re ordering and renaming of the feaatures to concat to the new osthole data easily
 oldData = oldData[['Seo', 'Cancer Type', 'Cell Line', 'Coumarin Type', 'Coumarin Dose', 'Time', 'Viability']];
-
 oldData.columns = ['Author', 'Cancer', 'Cell Line', 'Coumarin', 'Dose', 'Time', "Viability"];
-
 newData = data[['Author', 'Cancer', 'Cell Line', 'Coumarin', 'Dose', 'Time', "Viability"]]
 
+# Make the time feature numerical
 newData['Time'] = newData['Time'].str.replace(r'\D', '', regex=True).astype(int);
 
+# Concat the datas toghether
 finalDataset = pd.concat([oldData, newData]);
 
-finalDataset['Cancer'] = finalDataset['Cancer'].str.strip().str.lower().str.replace('\n', ' ', regex=False)
+finalDataset['Cancer'] = finalDataset['Cancer'].str.strip().str.lower().str.replace('\n', ' ', regex=False);
 
 mapping = {
     # Prostate
@@ -144,10 +144,19 @@ mapping = {
     'leukemia/lymphoma': 'leukemia:lymphoma'
 }
 
+# Fix the Cancer names here
 finalDataset['Cancer'] = finalDataset['Cancer'].replace(mapping);
 
-
+# Final look at the Cancers in the dataset
 print(finalDataset['Cancer'].unique())
 print(finalDataset['Cancer'].value_counts())
 
+# Strip whitespace from the columns names 
+finalDataset.columns = finalDataset.columns.str.replace(" ", "", regex=False);
+finalDataset.columns = finalDataset.columns.str.strip();
+
+
+# Save the dataset
 finalDataset.to_csv("Data/Final_Data.csv", index = False);
+
+print(finalDataset["Coumarin"].value_counts())

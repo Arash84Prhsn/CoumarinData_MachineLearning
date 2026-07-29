@@ -1,4 +1,4 @@
-Author,Cancer,Cell Line,Coumarin,Dose,Time,Viability
+Author,Cancer,CellLine,Coumarin,Dose,Time,Viability
 Abolhassani et al.,prostate,PC-3,Auraptene,5.0,48,93.33
 Abolhassani et al.,prostate,PC-3,Auraptene,10.0,48,94.5
 Abolhassani et al.,prostate,PC-3,Auraptene,20.0,48,92.15
