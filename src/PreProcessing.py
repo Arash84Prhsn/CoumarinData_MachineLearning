@@ -155,8 +155,8 @@ print(finalDataset['Cancer'].value_counts())
 finalDataset.columns = finalDataset.columns.str.replace(" ", "", regex=False);
 finalDataset.columns = finalDataset.columns.str.strip();
 
+# Strip WhiteSpace from the coumarins as well
+finalDataset['Coumarin'] = finalDataset['Coumarin'].str.strip().str.replace(" ", "", regex=False);
 
 # Save the dataset
 finalDataset.to_csv("Data/Final_Data.csv", index = False);
-
-print(finalDataset["Coumarin"].value_counts())
