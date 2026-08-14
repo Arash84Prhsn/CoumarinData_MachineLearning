@@ -14,7 +14,6 @@ from sklearn.pipeline import Pipeline
 
 from sklearn.model_selection import (
     train_test_split,
-    GroupShuffleSplit,
     KFold,
     GroupKFold,
     RandomizedSearchCV
@@ -38,8 +37,10 @@ RESULTS_DIR = "Results/Regression/"
 MODELS_DIR = RESULTS_DIR + "Models/"
 EVALUATIONS_DIR = RESULTS_DIR + "Evaluations/"
 PARAMETERS_DIR = RESULTS_DIR + "BestParameters/"
+N_ITER = 3000 # Number of iterations for the random search
 
 # Make the required directories if they do not exist
+os.makedirs(RESULTS_DIR, exist_ok=True)
 os.makedirs(EVALUATIONS_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(PARAMETERS_DIR, exist_ok=True)
@@ -47,12 +48,8 @@ os.makedirs(PARAMETERS_DIR, exist_ok=True)
 # Take a look at the head of the data
 print()
 print("Head of the raw data:\n")
-print(tabulate(data.head(), headers='keys', tablefmt="grid"))
+print(tabulate(data.head(), headers='keys', tablefmt="rounded_grid"))
 print()
-
-# Check for directories
-if not os.path.exists(RESULTS_DIR):
-    os.mkdir(RESULTS_DIR);
 
 # Set X and y
 X = data.drop(columns=["Viability", "Author", "Coumarin"], inplace=False)
@@ -75,11 +72,10 @@ data["GroupID"] = (
 print("Number of uniquely identified groups using Author, Coumarin, CellLine and Time:", data["GroupID"].nunique())
 
 print("Number Groups using only Coumarins:", data["Coumarin"].nunique())
-
 print()
 
 # Prepare the preprocessor
-preporcessor = ColumnTransformer(
+preprocessor = ColumnTransformer(
     transformers= [(
         "cat",
         OneHotEncoder(sparse_output=False, handle_unknown="ignore"),
@@ -92,7 +88,7 @@ preporcessor = ColumnTransformer(
     )]
 )
 
-# Initialize the raw Model
+# Initialize the base model object
 model = XGBRegressor(
     objective="reg:squarederror",
     n_jobs=-1,
@@ -101,12 +97,12 @@ model = XGBRegressor(
 
 # Define pipeline
 pipeline = Pipeline([
-    ("preprocessor", preporcessor),
+    ("preprocessor", preprocessor),
     ("model", model)
 ])
 
 # Define the search grid of the model for fine tuning the hyper parameters (Using randomSearch)
-param_grid = {
+param_distributions = {
     "model__n_estimators": [
         100, 150, 200, 300, 400, 500,
         600, 800, 1000
@@ -149,17 +145,6 @@ param_grid = {
     ]
 }
 
-# Next up we'll define some helpers so that reproducubility under different conditions is simpler
-
-# Helper function to get the results of evaluation
-def calculate_metrics(y_true, y_pred):
-    return {
-        "MAE" : mean_absolute_error(y_true, y_pred),
-        "RMSE" : np.sqrt(mean_squared_error(y_true, y_pred)),
-        "MedAE" : median_absolute_error(y_true, y_pred),
-        "R2" : r2_score(y_true, y_pred)
-    };
-
 # Evaluation methods:
 eval_methods = {
     "Kfold" : {
@@ -186,23 +171,403 @@ eval_methods = {
     }
 }
 
-# We can now start the evaluation process
-eval_results = []
+# Next up we'll define some helpers so that reproducubility under different conditions is simplified
+
+#===================================================================================================
+# Helper function to get the results of evaluation
+def calculate_metrics(y_true, y_pred):
+    """
+    Returns a Dict containing the following metrics as keys:
+    - "MAE"
+    - "RMSE"
+    - "MedAE"
+    - "R2"
+
+    :param y_true: The true y vector.
+    :param y_pred: The y that has been predicted by a model.
+    """
+    return {
+        "MAE" : mean_absolute_error(y_true, y_pred),
+        "RMSE" : np.sqrt(mean_squared_error(y_true, y_pred)),
+        "MedAE" : median_absolute_error(y_true, y_pred),
+        "R2" : r2_score(y_true, y_pred)
+    };
+
+# A helper function to return a freash pipeline if needed
+def create_model():
+
+    return Pipeline([
+        (
+            "preprocessor",
+            ColumnTransformer(
+                transformers=[
+                    (
+                        "cat",
+                        OneHotEncoder(
+                            sparse_output=False,
+                            handle_unknown="ignore"
+                        ),
+                        categorical_features
+                    ),
+                    (
+                        "num",
+                        "passthrough",
+                        numerical_features
+                    )
+                ]
+            )
+        ),
+        (
+            "model",
+            XGBRegressor(
+                objective="reg:squarederror",
+                n_jobs=-1,
+                random_state=RANDOM_STATE
+            )
+        )
+    ]);
+
+# Helper function that will return a pipeline that has been fitted to the given params
+def create_model_with_params(best_params):
+
+    model_pipeline = create_model()
+
+    model_pipeline.set_params(
+        **best_params
+    )
+
+    return model_pipeline;
+
+# A Function that will allow us to perform the search under different conditions if needed
+def search_best_parameters(method_name, splitter, groups):
+    """
+    Performs RandomizedSearchCV if the best-parameter JSON
+    does not already exist.
+
+    If the JSON exists, the search is skipped and the
+    previously determined parameters are loaded instead.
+    """
+
+    parameter_path = (
+        PARAMETERS_DIR +
+        f"XGBoost_{method_name}.json"
+    )
+
+    # --------------------------------------------------------
+    # Check whether the search has already been performed
+    # --------------------------------------------------------
+
+    if os.path.exists(parameter_path):
+
+        print()
+        print(f"[{method_name}] Best parameters already exist.")
+        print("Skipping hyperparameter search.")
+
+        with open(
+            parameter_path,
+            "r"
+        ) as file:
+
+            best_params = json.load(file)
+
+        return best_params
+
+
+    # --------------------------------------------------------
+    # Perform the search if the json does not exist
+    # --------------------------------------------------------
+
+    print()
+    print("=" * 70)
+    print(f"Starting hyperparameter search: {method_name}")
+    print("=" * 70)
+    print()
+
+    search = RandomizedSearchCV(
+        estimator=pipeline,
+        param_distributions=param_distributions,
+        n_iter=N_ITER,
+        scoring="r2",
+        cv=splitter,
+        random_state=RANDOM_STATE,
+        n_jobs=-1,
+        refit=False,
+        verbose=1
+    )
+
+    if groups is None:
+
+        search.fit(
+            X,
+            y
+        )
+
+    else:
+
+        search.fit(
+            X,
+            y,
+            groups=groups
+        )
+
+    # --------------------------------------------------------
+    # Retrieve best parameters post searching
+    # --------------------------------------------------------
+
+    best_params = search.best_params_
+
+    print()
+    print(
+        f"Best CV R2 for {method_name}: "
+        f"{search.best_score_:.6f}"
+    )
+
+    print()
+    print("Best parameters:")
+
+    for parameter, value in best_params.items():
+        print(
+            f"  {parameter}: {value}"
+        )
+
+    # --------------------------------------------------------
+    # Save parameters
+    # --------------------------------------------------------
+
+    with open(
+        parameter_path,
+        "w"
+    ) as file:
+
+        json.dump(
+            best_params,
+            file,
+            indent=4
+        )
+
+    print()
+    print(
+        f"Best parameters saved to: "
+        f"{parameter_path}"
+    )
+
+    return best_params;
+
+# A function that will allow us to find metrics other than the R2 used in the search
+def evaluate_model(
+    method_name,
+    splitter,
+    groups,
+    best_params
+):
+    """
+    Evaluates a model with fixed hyperparameters using the
+    same CV strategy that was used during hyperparameter
+    searching.
+
+    A fresh model is fitted for every fold.
+
+    Returns:
+        - fold-level results
+        - mean metrics
+        - standard deviations
+    """
+
+    print()
+    print("=" * 70)
+    print(
+        f"Evaluating best model: {method_name}"
+    )
+    print("=" * 70)
+    print()
+
+    fold_results = []
+
+    # --------------------------------------------------------
+    # Generate the same CV splits used during the search
+    # --------------------------------------------------------
+
+    if groups is None:
+
+        split_iterator = splitter.split(
+            X,
+            y
+        )
+
+    else:
+
+        split_iterator = splitter.split(
+            X,
+            y,
+            groups=groups
+        )
+
+    # --------------------------------------------------------
+    # Evaluate every fold
+    # --------------------------------------------------------
+
+    for fold_number, (train_idx, test_idx) in enumerate(
+        split_iterator,
+        start=1
+    ):
+
+        print(
+            f"Evaluating fold {fold_number}..."
+        )
+
+        X_train = X.iloc[train_idx]
+        X_test = X.iloc[test_idx]
+
+        y_train = y.iloc[train_idx]
+        y_test = y.iloc[test_idx]
+
+        # Fresh model for this fold
+        fold_model = create_model_with_params(
+            best_params
+        )
+
+        # Fit ONLY on the training portion
+        fold_model.fit(
+            X_train,
+            y_train
+        )
+
+        # Predict the held-out portion
+        y_pred = fold_model.predict(
+            X_test
+        )
+
+        # Calculate all metrics
+        metrics = calculate_metrics(
+            y_test,
+            y_pred
+        )
+
+        fold_results.append({
+            "Method": method_name,
+            "Fold": fold_number,
+            **metrics
+        })
+
+        print(
+            f"  R2:    {metrics['R2']:.6f}"
+        )
+        print(
+            f"  MAE:   {metrics['MAE']:.6f}"
+        )
+        print(
+            f"  RMSE:  {metrics['RMSE']:.6f}"
+        )
+        print(
+            f"  MedAE: {metrics['MedAE']:.6f}"
+        )
+        print()
+
+    # --------------------------------------------------------
+    # Convert fold results to DataFrame
+    # --------------------------------------------------------
+
+    fold_results_df = pd.DataFrame(
+        fold_results
+    )
+
+    # --------------------------------------------------------
+    # Calculate mean and standard deviation
+    # --------------------------------------------------------
+
+    metrics = [
+        "MAE",
+        "RMSE",
+        "MedAE",
+        "R2"
+    ]
+
+    summary = {}
+
+    for metric in metrics:
+
+        summary[
+            f"{metric}_Mean"
+        ] = fold_results_df[metric].mean()
+
+        summary[
+            f"{metric}_Std"
+        ] = fold_results_df[metric].std()
+
+    return fold_results_df, summary;
+#===================================================================================================
+
+# We are done with the helper functions now we can start the process of searching and evaluating
+
+all_fold_results = []
+all_summary_results = []
 
 for method_name, method in eval_methods.items():
-
-    print()
-    print("=" * 70)
-    print(f"Evaluation method: {method_name}")
-    print("=" * 70)
-    print()
-
+    
+    # Set the splitter and the groups to be used in the search and evaluation
     splitter = method["splitter"]
     groups = method["groups"]
 
-    if method_name == "Kfold":
-        train_idx, test_idx = train_test_split(
-            np.arange(len(X)),
-            test_size=0.20,
-            random_state=RANDOM_STATE
-        )
+    # Get the best_params from the model
+    best_params = search_best_parameters(
+        method_name=method_name,
+        splitter=splitter,
+        groups=groups
+    )
+
+    # Get the results of the evaluation
+    fold_results_df, summary = evaluate_model(
+        method_name=method_name,
+        splitter=splitter,
+        groups=groups,
+        best_params=best_params
+    )
+
+    # Store fold level results
+    all_fold_results.append(fold_results_df)
+
+    # Store our summary
+    all_summary_results.append({
+        "Method" : method_name,
+        **summary # unpack the summary dict
+    });
+
+
+# Lets combine the results to one df
+all_fold_results_df = pd.concat(all_fold_results, ignore_index=True)
+summary_df = pd.DataFrame(all_summary_results)
+
+# Log the results in the terminal
+print()
+print("=" * 70)
+print("FOLD-LEVEL EVALUATION RESULTS")
+print("=" * 70)
+print()
+
+print(tabulate(all_fold_results_df, headers="keys", tablefmt="rounded_grid", showindex=False, floatfmt=".6f"))
+
+print()
+print("=" * 70)
+print("EVALUATION SUMMARY")
+print("=" * 70)
+print()
+
+print(tabulate(summary_df, headers="keys", tablefmt="rounded_grid", showindex=False, floatfmt=".6f"))
+
+# Now we can finally save the results as a csv file
+all_fold_results_df.to_csv(
+    EVALUATIONS_DIR +
+    "XGBoost_FoldResults.csv",
+    index=False
+)
+
+summary_df.to_csv(
+    EVALUATIONS_DIR +
+    "XGBoost_EvaluationSummary.csv",
+    index=False
+)
+
+print()
+print(
+    "Evaluation results saved."
+)
