@@ -1,4 +1,4 @@
-# My_Coumarins_Paper
+# My Coumarins Paper
 ### Current Objective:
 The goal in this paper is to achive extrapolation! For now Prepare the data and do the feature
 engineering job on this (Specifically the Chemoinformant features). For now this will be to just

@@ -24,7 +24,7 @@ data["Time"] = data["Time"].str.lower();
 print(data["Unit"].unique())
 print(data["Unit"].value_counts())
 
-# Molecular weight of Osthole.
+# Molecular weight of Osthole for unit conversion of the Dose column to µM.
 MW = 244.28;
 
 # The new data (Osthole data) needs unit transformation.
@@ -54,12 +54,8 @@ data.insert(5, 'Time', col);
 data.to_csv("Data/cleanedData.csv", index=False);
 
 # Now we shall concatenate this data to the old one.
-
 # Load the old dataset
-
 oldData = pd.read_csv("Data/oldData.csv");
-
-# print(oldData.columns);
 
 # Just some re ordering and renaming of the feaatures to concat to the new osthole data easily
 oldData = oldData[['Seo', 'Cancer Type', 'Cell Line', 'Coumarin Type', 'Coumarin Dose', 'Time', 'Viability']];
