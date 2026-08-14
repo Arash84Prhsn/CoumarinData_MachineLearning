@@ -46,17 +46,27 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(PARAMETERS_DIR, exist_ok=True)
 
 # Take a look at the head of the data
+print("=" * 70)
+print("STARTING XGBOOST REGRESSION SCRIPT")
+print("=" * 70)
+
 print()
 print("Head of the raw data:\n")
 print(tabulate(data.head(), headers='keys', tablefmt="rounded_grid"))
 print()
 
 # Set X and y
+print()
+print("=" * 70)
+print("DEFINING X AND y")
+print("=" * 70)
+print()
 X = data.drop(columns=["Viability", "Author", "Coumarin"], inplace=False)
 y = data['Viability']
 
 print("X features:")
-print(pd.Series(X.columns), end="\n\n") 
+print(tabulate(pd.DataFrame(X.columns), tablefmt="rounded_grid"), end="\n\n")
+print("The y vector has been set to the `Viability` feature")
 
 # Define the categorical and numerical features
 categorical_features = ["Cancer", "CellLine"]
@@ -69,10 +79,21 @@ data["GroupID"] = (
     data["CellLine"].astype(str) + "_" +
     data["Time"].astype(str)
 )
-print("Number of uniquely identified groups using Author, Coumarin, CellLine and Time:", data["GroupID"].nunique())
+print()
+print("=" * 70)
+print("Defining Grouping Strategies")
+print("=" * 70)
+print()
 
+print("1. Grouping using the Author, Coumarin, CellLinem and Time Features")
+print("Number of uniquely identified groups:", data["GroupID"].nunique())
+print()
+
+print("2. Grouping using the Coumarin feature")
 print("Number Groups using only Coumarins:", data["Coumarin"].nunique())
 print()
+
+print("3. The final strategy will be the usual Kfold using 5 folds")
 
 # Prepare the preprocessor
 preprocessor = ColumnTransformer(
@@ -253,13 +274,18 @@ def search_best_parameters(method_name, splitter, groups):
         f"XGBoost_{method_name}.json"
     )
 
+    print()
+    print("=" * 70)
+    print(f"Starting hyperparameter search: {method_name}")
+    print("=" * 70)
+    print()
+
     # --------------------------------------------------------
     # Check whether the search has already been performed
     # --------------------------------------------------------
 
     if os.path.exists(parameter_path):
 
-        print()
         print(f"[{method_name}] Best parameters already exist.")
         print("Skipping hyperparameter search.")
 
@@ -276,12 +302,6 @@ def search_best_parameters(method_name, splitter, groups):
     # --------------------------------------------------------
     # Perform the search if the json does not exist
     # --------------------------------------------------------
-
-    print()
-    print("=" * 70)
-    print(f"Starting hyperparameter search: {method_name}")
-    print("=" * 70)
-    print()
 
     search = RandomizedSearchCV(
         estimator=pipeline,
@@ -376,7 +396,7 @@ def evaluate_model(
     print()
     print("=" * 70)
     print(
-        f"Evaluating best model: {method_name}"
+        f"Evaluating best model: using {method_name} splitting method"
     )
     print("=" * 70)
     print()
@@ -568,6 +588,70 @@ summary_df.to_csv(
 )
 
 print()
-print(
-    "Evaluation results saved."
-)
+print("Evaluation results saved.")
+
+# Now that we are done with searching and evaluating, We can finally train the models on the whole dataset
+print()
+print("=" * 70)
+print("TRAINING FINAL MODELS")
+print("=" * 70)
+print()
+
+
+for method_name, method in eval_methods.items():
+
+    parameter_path = (
+        PARAMETERS_DIR +
+        f"XGBoost_{method_name}.json"
+    )
+
+    model_path = (
+        MODELS_DIR +
+        f"XGBoost_{method_name}.joblib"
+    )
+
+    # --------------------------------------------------------
+    # Load best parameters
+    # --------------------------------------------------------
+
+    with open(
+        parameter_path,
+        "r"
+    ) as file:
+
+        best_params = json.load(file)
+
+    # --------------------------------------------------------
+    # Create fresh model
+    # --------------------------------------------------------
+
+    final_model = create_model_with_params(
+        best_params
+    )
+
+    # --------------------------------------------------------
+    # Train on ALL available data
+    # --------------------------------------------------------
+
+    final_model.fit(
+        X,
+        y
+    )
+
+    # --------------------------------------------------------
+    # Save final model
+    # --------------------------------------------------------
+
+    joblib.dump(
+        final_model,
+        model_path
+    )
+
+    print(f"{method_name} final model saved to:")
+    print(f"  {model_path}")
+
+
+print()
+print("=" * 70)
+print("DONE")
+print("=" * 70)
