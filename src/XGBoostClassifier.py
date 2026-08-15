@@ -31,9 +31,29 @@ from tabulate import tabulate
 # Load the data
 data = pd.read_csv("Data/Engineered_Data.csv")
 
+print("=" * 70)
+print("STARTING XGBOOST REGRESSION SCRIPT")
+print("=" * 70)
+
+# Make the Viability feature categorical(1 if |Viability - 50| ≤ 5 and 0 otherwise)
+print()
+print("=" * 70)
+print("TRANSFORMING VIABILITY FEATURE FOR CLASSIFICATION")
+print("=" * 70)
+print()
+
+data['Viability'] = data['Viability'].apply(lambda x: 1 if abs(x - 50) <= 5 else 0)
+print("Viability has been transformed by the following citeria:")
+print("if |Viability - 50| ≤ 5 then set Viability to 1, set Viability to 0 otherwise")
+print()
+
+# The distribution of the classes
+print("The distribution of the new clasees of Viability:")
+print(tabulate(pd.DataFrame(data["Viability"].value_counts()), headers="keys", tablefmt="rounded_grid"))
+
 # Set constants here
 RANDOM_STATE = 42
-RESULTS_DIR = "Results/Regression/"
+RESULTS_DIR = "Results/Classification/"
 MODELS_DIR = RESULTS_DIR + "Models/"
 EVALUATIONS_DIR = RESULTS_DIR + "Evaluations/"
 PARAMETERS_DIR = RESULTS_DIR + "BestParameters/"
@@ -46,10 +66,6 @@ os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(PARAMETERS_DIR, exist_ok=True)
 
 # Take a look at the head of the data
-print("=" * 70)
-print("STARTING XGBOOST REGRESSION SCRIPT")
-print("=" * 70)
-
 print()
 print("Head of the raw data: (Shuffled to see more variance in the data)\n")
 print(tabulate(data.sample(frac=1).head(), headers='keys', tablefmt="rounded_grid"))
