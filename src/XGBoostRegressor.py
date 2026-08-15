@@ -51,8 +51,8 @@ print("STARTING XGBOOST REGRESSION SCRIPT")
 print("=" * 70)
 
 print()
-print("Head of the raw data:\n")
-print(tabulate(data.head(), headers='keys', tablefmt="rounded_grid"))
+print("Head of the raw data: (Shuffled to see more variance in the data)\n")
+print(tabulate(data.sample(frac=1).head(), headers='keys', tablefmt="rounded_grid"))
 print()
 
 # Set X and y
@@ -650,8 +650,63 @@ for method_name, method in eval_methods.items():
     print(f"{method_name} final model saved to:")
     print(f"  {model_path}")
 
+print()
+print("=" * 70)
+print("TESTING THE MODEL ON SCOPOLETIN SAMPLES")
+print("=" * 70)
+print()
+
+scopoletin_samples = [{
+    "Cancer" : [],
+    "CellLine" : [],
+    "Dose" : [],
+    "Time" : [],
+    "Viability" : []
+    },
+]
+
+scopoletin_structural_features = {
+    "MW" : 192.17, # From PubChem
+    "LogP" : 1.5, # From PubChem
+    "NumHDonors" : 1, # From PubChem
+    "NumHAcceptors" : 4, # From PubChem
+    "RotatableBonds" : 1, # From PubChem
+    "TPSA" : 55.8, # From PubChem
+    "RingCounts" : 2, # From PubChem Figure
+    "fCsp3" : 0.10 # From SwissADME
+}
+
+
 
 print()
 print("=" * 70)
-print("DONE")
+print("TESTING THE MODEL ON IMPERATORIN SAMPLES")
 print("=" * 70)
+print()
+
+imperatorin_samples = [{
+    "Cancer" : [],
+    "CellLine" : [],
+    "Dose" : [],
+    "Time" : [],
+    "Viability" : []
+    },
+]
+
+scopoletin_structural_features = {
+    "MW" : 270.28, # From PubChem
+    "LogP" : 3.4, # From PubChem
+    "NumHDonors" : 0, # From PubChem
+    "NumHAcceptors" : 4, # From PubChem
+    "RotatableBonds" : 3, # From PubChem
+    "TPSA" : 48.7, # From PubChem
+    "RingCounts" : 3, # From PubChem Figure
+    "fCsp3" : 0.19 # From SwissADME
+}
+
+
+print()
+print("=" * 70)
+print("FINISHED SCRIPT SUCCESSFULLY!!!")
+print("=" * 70)
+print()
