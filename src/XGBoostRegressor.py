@@ -435,6 +435,12 @@ def evaluate_model(
             f"Evaluating fold {fold_number}..."
         )
 
+        # Find the left out coumarin in case that we are doing the coumarin method.
+        left_out_coumarin = None
+        if method_name == "Coumarin" :
+            left_out_coumarin = str(data.iloc[test_idx]["Coumarin"].iloc[0])
+            print("Left Out Coumarin is:", left_out_coumarin)
+
         X_train = X.iloc[train_idx]
         X_test = X.iloc[test_idx]
 
@@ -466,6 +472,7 @@ def evaluate_model(
         fold_results.append({
             "Method": method_name,
             "Fold": fold_number,
+            "Left Out Coumarin" : left_out_coumarin,
             **metrics
         })
 
@@ -652,6 +659,27 @@ for method_name, method in eval_methods.items():
 
 print()
 print("=" * 70)
+print("PREFERED SCOPOLETIN AND IMPERATORIN SAMPLES")
+print("=" * 70)
+print()
+
+print("In order to find the prefered samples, we wanted to see which CellLine and Timepoint combinations appear among most Coumarins.")
+
+cellline_time_summary = (
+    data.groupby(["CellLine", "Time"])["Coumarin"]
+    .nunique()
+    .sort_values(ascending=False)
+    .reset_index(name="NumberOfCoumarins")
+)
+
+# Consider combinations that appear among at least 4 coumarins:
+cellline_time_summary = cellline_time_summary[cellline_time_summary["NumberOfCoumarins"] >= 3]
+
+print("\nCellLine + Time combinations ranked by number of Coumarins:")
+print(tabulate(cellline_time_summary, headers='keys', tablefmt='rounded_grid'))
+
+print()
+print("=" * 70)
 print("TESTING THE MODEL ON SCOPOLETIN SAMPLES")
 print("=" * 70)
 print()
@@ -675,8 +703,6 @@ scopoletin_structural_features = {
     "RingCounts" : 2, # From PubChem Figure
     "fCsp3" : 0.10 # From SwissADME
 }
-
-
 
 print()
 print("=" * 70)
