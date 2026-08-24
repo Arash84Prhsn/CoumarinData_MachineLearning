@@ -678,6 +678,45 @@ cellline_time_summary = cellline_time_summary[cellline_time_summary["NumberOfCou
 print("\nCellLine + Time combinations ranked by number of Coumarins:")
 print(tabulate(cellline_time_summary, headers='keys', tablefmt='rounded_grid'))
 
+# We can now move onto validating and testing our model on new coumarins and samples not in the dataset
+print()
+print("=" * 70)
+print("Loading Validation Samples")
+print("=" * 70)
+print()
+# Load the Validation samples:
+validation_samples = pd.read_csv("Data/FarnesiferolC&Umbelliprenin.csv")
+print("Farnesiferol C and Umbelliprenin sample count:", validation_samples.__len__())
+
+# Transform the new validation samples to a dataframe containing
+
+print()
+print("=" * 70)
+print("TESTING THE MODEL ON FARNESIFEROL_C SAMPLES")
+print("=" * 70)
+print()
+
+farenesiferolC_samples = [{
+    "Cancer" : [],
+    "CellLine" : [],
+    "Dose" : [],
+    "Time" : [],
+    "Viability" : []
+    },
+]
+
+farenesiferolC_structural_features = {
+    "MW" : 382.5, # From PubChem
+    "LogP" : 5.5, # From PubChem
+    "NumHDonors" : 0, # From PubChem
+    "NumHAcceptors" : 4, # From PubChem
+    "RotatableBonds" : 6, # From PubChem
+    "TPSA" : 44.8, # From PubChem
+    "RingCounts" : 2, # From PubChem Figure
+    "fCsp3" : 0.54 # From SwissADME
+}
+
+
 print()
 print("=" * 70)
 print("TESTING THE MODEL ON SCOPOLETIN SAMPLES")
