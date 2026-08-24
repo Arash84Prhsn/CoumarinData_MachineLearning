@@ -214,7 +214,7 @@ def calculate_metrics(y_true, y_pred):
         "R2" : r2_score(y_true, y_pred)
     };
 
-# A helper function to return a freash pipeline if needed
+# A helper function to return a new pipeline if needed
 def create_model():
 
     return Pipeline([
@@ -719,7 +719,7 @@ imperatorin_samples = [{
     },
 ]
 
-scopoletin_structural_features = {
+imperatorin_structural_features = {
     "MW" : 270.28, # From PubChem
     "LogP" : 3.4, # From PubChem
     "NumHDonors" : 0, # From PubChem
