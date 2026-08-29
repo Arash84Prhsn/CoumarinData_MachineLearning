@@ -78,13 +78,13 @@ data["fCsp3"] = data["Coumarin"].map(fCsp3s)
 
 # Take a look at the new data structure and columns
 print("Head of the data after new features:")
-print(tabulate(data.head(), headers='keys', tablefmt='grid'))
+print(tabulate(data.head(), headers='keys', tablefmt='rounded_grid'))
 
 # Check out the correlation matrix of the new features
 cols = ["MW", "LogP", "NumHDonors", "NumHAcceptors", "RotatableBonds", "TPSA", "RingCounts", "fCsp3"]
 corr_matrix = data[cols].corr()
 print("\nCorrelation Matrix of the newly engineered features:")
-print(tabulate(corr_matrix, headers='keys', tablefmt="rounded_grid"))
+print(tabulate(corr_matrix, headers='keys', tablefmt='rounded_grid'))
 
 # Create heatmap
 plt.figure(figsize=(10, 8))
@@ -101,13 +101,5 @@ sns.heatmap(corr_matrix,
 plt.title('Engineered Features Correlation Matrix Heatmap', fontsize=14)
 plt.tight_layout()
 
-plt.show()
-
-
-""" 
-Given the results of the Correlation matrix I have decided that adding cross features could have a
-negative effect on the overall extrapolation process.
-"""
-
-# Save the new dataframe
-data.to_csv("Data/Engineered_Data.csv", index=False)
+# Given the results of the Correlation matrix I have decided that adding cross features could be
+# of negative effect to the overall generalization process.
