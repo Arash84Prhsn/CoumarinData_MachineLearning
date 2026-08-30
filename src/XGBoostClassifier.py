@@ -13,7 +13,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 from sklearn.model_selection import (
-    train_test_split,
     KFold,
     GroupKFold,
     RandomizedSearchCV
@@ -27,7 +26,6 @@ from sklearn.metrics import (
     f1_score,
     roc_auc_score,
     average_precision_score,
-    confusion_matrix
 )
 
 from tabulate import tabulate
@@ -59,7 +57,7 @@ print(tabulate(pd.DataFrame(data["Target"].value_counts()), headers="keys", tabl
 
 # Set constants here
 RANDOM_STATE = 42
-RESULTS_DIR = "Results/Classification/"
+RESULTS_DIR = "Results/Classification/XGboost"
 MODELS_DIR = RESULTS_DIR + "Models/"
 EVALUATIONS_DIR = RESULTS_DIR + "Evaluations/"
 PARAMETERS_DIR = RESULTS_DIR + "BestParameters/"

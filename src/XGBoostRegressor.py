@@ -33,7 +33,7 @@ data = pd.read_csv("Data/Engineered_Data.csv")
 
 # Set constants here
 RANDOM_STATE = 42
-RESULTS_DIR = "Results/Regression/"
+RESULTS_DIR = "Results/Regression/XGboost/"
 MODELS_DIR = RESULTS_DIR + "Models/"
 EVALUATIONS_DIR = RESULTS_DIR + "Evaluations/"
 PARAMETERS_DIR = RESULTS_DIR + "BestParameters/"
@@ -45,7 +45,6 @@ os.makedirs(EVALUATIONS_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(PARAMETERS_DIR, exist_ok=True)
 
-# Take a look at the head of the data
 print("=" * 70)
 print("STARTING XGBOOST REGRESSION SCRIPT")
 print("=" * 70)

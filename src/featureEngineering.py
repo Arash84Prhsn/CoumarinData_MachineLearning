@@ -64,7 +64,13 @@ fCsp3s = {"Auraptene": 0.32,
 
 
 # Read the data
-data = pd.read_csv("Data/Final_Data.csv")
+data = pd.read_csv("Data/Data.csv")
+
+# Remove null columns
+data = data.dropna(axis=1)
+
+# Remove whitspace from the coumarin values
+data["Coumarin"] = data["Coumarin"].str.replace(r'\s+', '', regex=True)
 
 # Add the new features
 data["MW"] = data["Coumarin"].map(MWs)
@@ -76,12 +82,16 @@ data["TPSA"] = data["Coumarin"].map(TPSAs)
 data["RingCounts"] = data["Coumarin"].map(ringCounts)
 data["fCsp3"] = data["Coumarin"].map(fCsp3s)
 
+# Save the data
+data.to_csv("Data/Engineered_Data.csv",index=False)                                 
+
 # Take a look at the new data structure and columns
 print("Head of the data after new features:")
 print(tabulate(data.head(), headers='keys', tablefmt='rounded_grid'))
 
-# Check out the correlation matrix of the new features
-cols = ["MW", "LogP", "NumHDonors", "NumHAcceptors", "RotatableBonds", "TPSA", "RingCounts", "fCsp3"]
+# Check out the correlation matrix of the new features (Ring counts excluded due to low variation)
+cols = ["MW", "LogP", "NumHDonors", "NumHAcceptors", "RotatableBonds", "TPSA","RingCounts", "fCsp3"]
+
 corr_matrix = data[cols].corr()
 print("\nCorrelation Matrix of the newly engineered features:")
 print(tabulate(corr_matrix, headers='keys', tablefmt='rounded_grid'))
