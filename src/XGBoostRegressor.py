@@ -683,11 +683,7 @@ print("=" * 70)
 print("Loading Validation Samples")
 print("=" * 70)
 print()
-# Load the Validation samples:
-validation_samples = pd.read_csv("Data/FarnesiferolC&Umbelliprenin.csv")
-print("Farnesiferol C and Umbelliprenin sample count:", validation_samples.__len__())
 
-# Transform the new validation samples to a dataframe containing
 
 print()
 print("=" * 70)
