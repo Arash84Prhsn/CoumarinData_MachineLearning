@@ -107,7 +107,7 @@ MODELS_DIR = RESULTS_DIR + "Models/"
 EVALUATIONS_DIR = RESULTS_DIR + "Evaluations/"
 PARAMETERS_DIR = RESULTS_DIR + "BestParameters/"
 
-N_ITER = 5
+N_ITER = 50
 
 
 # ===================================================================================================

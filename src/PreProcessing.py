@@ -1,158 +1,125 @@
-import pandas as pd;
-import numpy as np;
+import numpy as np
+import pandas as pd
+from tabulate import tabulate
+import matplotlib.pylab as plt
+import seaborn as sns
 
-data = pd.read_excel("Data/meta Niloofar 8.10.404.final.xlsx");
-data = data.drop(columns=['Column1', 'N0.']);
+# All features Engineering will be done in this script, and kept separated from the general preProcessing
 
-# Forward fill these categorical features
-data["Author"] = data["Author"].ffill();
-data["Cancer"] = data["Cancer"].ffill();
-data["Cell Line"] = data["Cell Line"].ffill();
+# The first obvious feature to add will be the Molecular Weights (From PubChem)
+MWs = {"Auraptene": 298.4,
+       "Osthole": 244.28,
+       "Esculetin": 178.14,
+       "GalbanicAcid": 398.5,
+       "Umbelliprenin": 366.5};
 
-# 1. Remove all whitespace
-data["Unit"] = data["Unit"].str.replace(r"\s+", "", regex=True);
-data["Time"] = data["Time"].str.replace(r"\s+", "", regex=True);
+# The second Important Feature will be LogP (XLogP3 From PubChem)
+LogPs = {"Auraptene": 5.3,
+         "Osthole": 3.8,
+         "Esculetin": 1.2,
+         "GalbanicAcid": 5.1,
+         "Umbelliprenin": 7.1}
 
-# 2. Normalize unicode µ signs to standard 'µ'
-data["Unit"] = data["Unit"].str.replace('μ', 'µ')
+# Number of the Hydrogen bond donors
+numHDonors = {"Auraptene": 0,
+              "Osthole": 0,
+              "Esculetin": 2,
+              "GalbanicAcid": 1,
+              "Umbelliprenin": 0}
 
-# 3. Lowercase for consistency
-data["Unit"] = data["Unit"].str.lower();
-data["Time"] = data["Time"].str.lower();
+# Number of the Hydrohen bond acceptors
+numHAcceptors = {"Auraptene": 3,
+                 "Osthole": 3,
+                 "Esculetin": 4,
+                 "GalbanicAcid": 5,
+                 "Umbelliprenin": 3}
+
+# Number of rotatable bonds
+rotatableBonds = {"Auraptene": 6,
+                  "Osthole": 3,
+                  "Esculetin": 0,
+                  "GalbanicAcid": 6,
+                  "Umbelliprenin": 9}
+
+# Topological Polar Surface Area (From PubChem)
+TPSAs = {"Auraptene": 35.5,
+         "Osthole": 35.5,
+         "Esculetin": 66.8,
+         "GalbanicAcid": 72.8,
+         "Umbelliprenin": 35.5}
+
+# Ring Counts
+ringCounts = {"Auraptene": 2,
+              "Osthole": 2,
+              "Esculetin": 2,
+              "GalbanicAcid": 3,
+              "Umbelliprenin": 2}
+
+# FractionCsp3: The fraction of carbon atoms that are sp3 hybridized.
+fCsp3s = {"Auraptene": 0.32,
+          "Osthole": 0.27,
+          "Esculetin": 0,
+          "GalbanicAcid": 0.5,
+          "Umbelliprenin": 0.38}
 
 
-print(data["Unit"].unique())
-print(data["Unit"].value_counts())
+# Read the data
+data = pd.read_csv("Data/Data.csv")
 
-# Molecular weight of Osthole for unit conversion of the Dose column to µM.
-MW = 244.28;
+# Remove null columns
+data = data.dropna(axis=1)
 
-# The new data (Osthole data) needs unit transformation.
-def to_uM(row):
-    if row["Unit"].strip() == "mg/ml":
-        return row["Dose"] * 1e6 / MW;
+# Remove whitspace from the categorical values and make them lowercase
+data["Coumarin"] = data["Coumarin"].str.replace(r'\s+', '', regex=True)
+data["Coumarin"] = data["Coumarin"].str.lower()
 
-    elif row["Unit"].strip() == "nm":
-        return row["Dose"] * 1e-3;
+data["Coumarin"] = data["Coumarin"].str.replace(r'\s+', '', regex=True)
+data["Coumarin"] = data["Coumarin"].str.lower()
 
-    elif row["Unit"].strip() == "µg/ml":
-        return row['Dose'] * 1e3 / MW;
+data["Coumarin"] = data["Coumarin"].str.replace(r'\s+', '', regex=True)
+data["Coumarin"] = data["Coumarin"].str.lower()
 
-    else:
-        return row["Dose"];
+# Remove whitespace from the feature names as well
+data.columns = data.columns.str.replace(r'\s+', '', regex=True)
 
-data["Dose"] = data.apply(to_uM, axis=1)
-data["Dose"] = data["Dose"].round(2);
+# Add the new features
+data["MW"] = data["Coumarin"].map(MWs)
+data["LogP"] = data["Coumarin"].map(LogPs)
+data["NumHDonors"] = data["Coumarin"].map(numHDonors)
+data["NumHAcceptors"] = data["Coumarin"].map(numHAcceptors)
+data["RotatableBonds"] = data["Coumarin"].map(rotatableBonds)
+data["TPSA"] = data["Coumarin"].map(TPSAs)
+data["RingCounts"] = data["Coumarin"].map(ringCounts)
+data["fCsp3"] = data["Coumarin"].map(fCsp3s)
 
-data["Unit"] = "µM"
-data["Coumarin"] = "Osthole"
-col = data.pop("Coumarin");
-data.insert(3, 'Coumarin', col);
-col = data.pop("Time");
-data.insert(5, 'Time', col);
+# Take a look at the new data structure and columns
+print("Head of the data after new features:")
+print(tabulate(data.head(), headers='keys', tablefmt='rounded_grid'))
 
-data.to_csv("Data/cleanedData.csv", index=False);
+# Check out the correlation matrix of the new features (Ring counts excluded due to low variation)
+cols = ["MW", "LogP", "NumHDonors", "NumHAcceptors", "RotatableBonds", "TPSA","RingCounts", "fCsp3"]
 
-# Now we shall concatenate this data to the old one.
-# Load the old dataset
-oldData = pd.read_csv("Data/oldData.csv");
+corr_matrix = data[cols].corr()
+print("\nCorrelation Matrix of the newly engineered features:")
+print(tabulate(corr_matrix, headers='keys', tablefmt='rounded_grid'))
 
-# Just some re ordering and renaming of the feaatures to concat to the new osthole data easily
-oldData = oldData[['Seo', 'Cancer Type', 'Cell Line', 'Coumarin Type', 'Coumarin Dose', 'Time', 'Viability']];
-oldData.columns = ['Author', 'Cancer', 'Cell Line', 'Coumarin', 'Dose', 'Time', "Viability"];
-newData = data[['Author', 'Cancer', 'Cell Line', 'Coumarin', 'Dose', 'Time', "Viability"]]
+# Create heatmap
+plt.figure(figsize=(10, 8))
 
-# Make the time feature numerical
-newData['Time'] = newData['Time'].str.replace(r'\D', '', regex=True).astype(int);
+sns.heatmap(corr_matrix, 
+            annot=True,                # Show values
+            cmap='RdBu_r',             # Color scheme
+            center=0,                  # Center colormap at 0
+            fmt='.2f',                 # 2 decimal places
+            square=True,               # Square cells
+            linewidths=0.5,            # Grid lines
+            cbar_kws={"shrink": 0.8})  # Colorbar size
 
-# Concat the datas toghether
-finalDataset = pd.concat([oldData, newData]);
+plt.title('Engineered Features Correlation Matrix Heatmap', fontsize=14)
+plt.tight_layout()
 
-finalDataset['Cancer'] = finalDataset['Cancer'].str.strip().str.lower().str.replace('\n', ' ', regex=False);
+# Given the results of the Correlation matrix I have decided that adding cross features could be
+# of negative effect to the overall generalization process.
 
-mapping = {
-    # Prostate
-    'prostate': 'prostate',
-    'prostate cancer': 'prostate',
-
-    # Breast
-    'breast': 'breast',
-
-    # Lung
-    'lung': 'lung',
-    'lung cancer': 'lung',
-    'lung adenocarcinoma': 'lung',
-
-    # Colon / Colorectal
-    'colon': 'colon',
-    'colorectal cancer': 'colon',
-    'colon adenocarcinoma': 'colon',
-
-    # Liver
-    'liver': 'liver',
-    'hepatocellular carcinoma': 'liver',
-
-    # Cholangiocarcinoma
-    'cholangiocarcinoma': 'cholangiocarcinoma',
-    'intrahepatic cholangiocarcinoma': 'cholangiocarcinoma',
-
-    # Cervical
-    'cervical': 'cervical',
-    'cervix': 'cervical',
-    'cervical carcinoma': 'cervical',
-
-    # Ovarian
-    'ovarian': 'ovarian',
-    'ovarian carcinoma': 'ovarian',
-    'ovarian endometrioid adenocarcinoma': 'ovarian',
-
-    # Endometrial / Uterine
-    'uterine': 'endometrial',
-    'endometrial': 'endometrial',
-
-    # Renal
-    'renal': 'renal',
-    'renal cell carcinoma': 'renal',
-
-    # Bone
-    'bone': 'bone',
-    'osteosarcoma': 'bone',
-
-    # Skin
-    'skin': 'skin',
-    'melanoma': 'melanoma',
-
-    # Brain tumors
-    'glioma': 'glioma',
-    'glioblastoma': 'glioma',
-    'oligodendroglioma': 'glioma',
-    'medulloblastoma': 'medulloblastoma',
-
-    # Other organs
-    'gastric': 'gastric',
-    'pancreatic': 'pancreatic',
-    'oral': 'oral',
-    'salivary gland': 'salivary gland',
-    'bladder': 'bladder',
-    'nasopharyngeal': 'nasopharyngeal',
-    'esophageal squamous cell carcinoma': 'esophageal',
-    'gallbladder cancer': 'gallbladder',
-    'leukemia/lymphoma': 'leukemia:lymphoma'
-}
-
-# Fix the Cancer names here
-finalDataset['Cancer'] = finalDataset['Cancer'].replace(mapping);
-
-# Final look at the Cancers in the dataset
-print(finalDataset['Cancer'].unique())
-print(finalDataset['Cancer'].value_counts())
-
-# Strip whitespace from the columns names 
-finalDataset.columns = finalDataset.columns.str.replace(" ", "", regex=False);
-finalDataset.columns = finalDataset.columns.str.strip();
-
-# Strip WhiteSpace from the coumarins as well
-finalDataset['Coumarin'] = finalDataset['Coumarin'].str.strip().str.replace(" ", "", regex=False);
-
-# Save the dataset
-finalDataset.to_csv("Data/Final_Data.csv", index = False);
+# Save the data
+data.to_csv("Data/Engineered_Data.csv",index=False)

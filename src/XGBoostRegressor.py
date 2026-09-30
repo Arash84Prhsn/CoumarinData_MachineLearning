@@ -13,7 +13,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
 from sklearn.model_selection import (
-    train_test_split,
     KFold,
     GroupKFold,
     RandomizedSearchCV
@@ -37,6 +36,7 @@ RESULTS_DIR = "Results/Regression/XGboost/"
 MODELS_DIR = RESULTS_DIR + "Models/"
 EVALUATIONS_DIR = RESULTS_DIR + "Evaluations/"
 PARAMETERS_DIR = RESULTS_DIR + "BestParameters/"
+VALIDATION_DIR = RESULTS_DIR + "Validations/"
 N_ITER = 3000 # Number of iterations for the random search
 
 # Make the required directories if they do not exist
@@ -44,6 +44,7 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 os.makedirs(EVALUATIONS_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(PARAMETERS_DIR, exist_ok=True)
+os.makedirs(VALIDATION_DIR, exist_ok=True)
 
 print("=" * 70)
 print("STARTING XGBOOST REGRESSION SCRIPT")
@@ -677,93 +678,290 @@ cellline_time_summary = cellline_time_summary[cellline_time_summary["NumberOfCou
 print("\nCellLine + Time combinations ranked by number of Coumarins:")
 print(tabulate(cellline_time_summary, headers='keys', tablefmt='rounded_grid'))
 
+#===================================================================================================
 # We can now move onto validating and testing our model on new coumarins and samples not in the dataset
-print()
-print("=" * 70)
-print("Loading Validation Samples")
-print("=" * 70)
-print()
+# Helper functions for validating trained models on a new coumarin
+def add_structural_properties(data: pd.DataFrame, properties: dict) -> pd.DataFrame:
+    # Create a copy to avoid modifying the original DataFrame
+    df_with_structural_properties = data.copy()
+    
+    # Add each property as a new column with the same value for all rows
+    for prop_name, prop_value in properties.items():
+        df_with_structural_properties[prop_name] = prop_value
+    
+    return df_with_structural_properties;
+
+def validate_new_coumarin(coumarin_name, validation_data, structural_features, model_methods):
+    """
+    Validates all saved XGBoost models on a new coumarin.
+
+    Parameters
+    ----------
+    coumarin_name : str
+        Name of the coumarin being tested.
+
+    validation_data : pd.DataFrame
+        Experimental validation data containing:
+        Coumarin, Cancer, CellLine, Dose, Time, Viability
+
+    structural_features : dict
+        Structural descriptors for the coumarin.
+
+    model_methods : list
+        List of saved model methods to evaluate.
+
+    Returns
+    -------
+    comparison_df : pd.DataFrame
+        Actual and predicted viability for every sample.
+
+    metrics_df : pd.DataFrame
+        Regression metrics for every model.
+    """
+        
+    print()
+    print("=" * 70)
+    print(f"VALIDATING NEW COUMARIN: {coumarin_name}")
+    print("=" * 70)
+    print()
+
+    # Add structural properties to the validation data
+    validation_df = add_structural_properties(
+        validation_data,
+        structural_features
+    )
+
+    # Store the actual viability values
+    y_true = validation_df["Viability"]
+
+    # Prepare X using exactly the same features used during training
+    X_validation = validation_df.drop(
+        columns=["Viability", "Coumarin"],
+        errors="ignore"
+    )
+
+    # Make sure the validation features match the training features
+    expected_features = X.columns.tolist()
+
+    missing_features = [
+        feature for feature in expected_features
+        if feature not in X_validation.columns
+    ]
+
+    if missing_features:
+        raise ValueError(
+            f"Missing required features for {coumarin_name}: {missing_features}"
+        )
+
+    # Keep only the features used during training and in the same order
+    X_validation = X_validation[expected_features]
+
+    print("Validation data:")
+    print(tabulate(validation_df, headers="keys", tablefmt="rounded_grid", showindex=False))
+    print()
+
+    # Create dataframe containing the original information and actual viability
+    comparison_df = validation_df[
+        ["Coumarin", "Cancer", "CellLine", "Dose", "Time", "Viability"]
+    ].copy()
+
+    comparison_df.rename(
+        columns={"Viability": "ActualViability"},
+        inplace=True
+    )
+
+    metrics_results = []
+
+    # Test every saved model
+    for method_name in model_methods:
+
+        print()
+        print("-" * 70)
+        print(f"Testing model: {method_name}")
+        print("-" * 70)
+
+        model_path = MODELS_DIR + f"XGBoost_{method_name}.joblib"
+
+        if not os.path.exists(model_path):
+            print(f"WARNING: Model not found: {model_path}")
+            continue
+
+        # Load the trained model
+        trained_model = joblib.load(model_path)
+
+        # Predict viability
+        y_pred = trained_model.predict(X_validation)
+
+        # Add predictions to the comparison dataframe
+        comparison_df[f"PredictedViability_{method_name}"] = y_pred
+
+        # Calculate metrics
+        metrics = calculate_metrics(y_true, y_pred)
+
+        metrics_results.append({
+            "Coumarin": coumarin_name,
+            "ModelMethod": method_name,
+            **metrics
+        })
+
+        print(f"R2:    {metrics['R2']:.6f}")
+        print(f"MAE:   {metrics['MAE']:.6f}")
+        print(f"RMSE:  {metrics['RMSE']:.6f}")
+        print(f"MedAE: {metrics['MedAE']:.6f}")
+
+    # Convert metrics to dataframe
+    metrics_df = pd.DataFrame(metrics_results)
+
+    # Print actual vs predicted results
+    print()
+    print("=" * 70)
+    print(f"ACTUAL VS PREDICTED RESULTS: {coumarin_name}")
+    print("=" * 70)
+    print()
+
+    print(tabulate(
+        comparison_df,
+        headers="keys",
+        tablefmt="rounded_grid",
+        showindex=False,
+        floatfmt=".4f"
+    ))
+
+    # Print validation metrics
+    print()
+    print("=" * 70)
+    print(f"VALIDATION METRICS: {coumarin_name}")
+    print("=" * 70)
+    print()
+
+    print(tabulate(
+        metrics_df,
+        headers="keys",
+        tablefmt="rounded_grid",
+        showindex=False,
+        floatfmt=".6f"
+    ))
+
+    # Save predictions
+    comparison_path = VALIDATION_DIR + f"{coumarin_name}_Predictions.csv"
+    comparison_df.to_csv(comparison_path, index=False)
+
+    # Save metrics
+    metrics_path = VALIDATION_DIR + f"{coumarin_name}_Metrics.csv"
+    metrics_df.to_csv(metrics_path, index=False)
+
+    print()
+    print(f"Predictions saved to: {comparison_path}")
+    print(f"Metrics saved to: {metrics_path}")
+
+    return comparison_df, metrics_df
 
 
-print()
-print("=" * 70)
-print("TESTING THE MODEL ON FARNESIFEROL_C SAMPLES")
-print("=" * 70)
-print()
-
-farenesiferolC_samples = [{
-    "Cancer" : [],
-    "CellLine" : [],
-    "Dose" : [],
-    "Time" : [],
-    "Viability" : []
+# Define the structural information for the new coumarins in the dict below:
+validation_coumarins_structural_info = {
+    "FarnesiferolC" : {
+        "MW" : 382.5, # From PubChem
+        "LogP" : 5.5, # From PubChem
+        "NumHDonors" : 0, # From PubChem
+        "NumHAcceptors" : 4, # From PubChem
+        "RotatableBonds" : 6, # From PubChem
+        "TPSA" : 44.8, # From PubChem
+        "RingCounts" : 2, # From PubChem Figure
+        "fCsp3" : 0.54 # From SwissADME
     },
-]
 
-farenesiferolC_structural_features = {
-    "MW" : 382.5, # From PubChem
-    "LogP" : 5.5, # From PubChem
-    "NumHDonors" : 0, # From PubChem
-    "NumHAcceptors" : 4, # From PubChem
-    "RotatableBonds" : 6, # From PubChem
-    "TPSA" : 44.8, # From PubChem
-    "RingCounts" : 2, # From PubChem Figure
-    "fCsp3" : 0.54 # From SwissADME
+    "Umbelliprenin" : {
+        "MW" : 366.5, # From PubChem
+        "LogP" : 7.1, # From PubChem
+        "NumHDonors" : 0, # From PubChem
+        "NumHAcceptors" : 3, # From PubChem
+        "RotatableBonds" : 9, # From PubChem
+        "TPSA" : 35.5, # From PubChem
+        "RingCounts" : 2, # From PubChem Figure
+        "fCsp3" : 0.38 # From SwissADME
+    },
+
+    "Scopoletin" : {
+        "MW" : 192.17, # From PubChem
+        "LogP" : 1.5, # From PubChem
+        "NumHDonors" : 1, # From PubChem
+        "NumHAcceptors" : 4, # From PubChem
+        "RotatableBonds" : 1, # From PubChem
+        "TPSA" : 55.8, # From PubChem
+        "RingCounts" : 2, # From PubChem Figure
+        "fCsp3" : 0.10 # From SwissADME
+    },
+
+    "Imperatorin" : {
+        "MW" : 270.28, # From PubChem
+        "LogP" : 3.4, # From PubChem
+        "NumHDonors" : 0, # From PubChem
+        "NumHAcceptors" : 4, # From PubChem
+        "RotatableBonds" : 3, # From PubChem
+        "TPSA" : 48.7, # From PubChem
+        "RingCounts" : 3, # From PubChem Figure
+        "fCsp3" : 0.19 # From SwissADME
+    }
 }
 
+# ===================================================================================
+# Validate the models on FarnesiferolC and Umbelliprenin
+# ===================================================================================
 
 print()
 print("=" * 70)
-print("TESTING THE MODEL ON SCOPOLETIN SAMPLES")
+print("LOADING VALIDATION DATA")
 print("=" * 70)
 print()
 
-scopoletin_samples = [{
-    "Cancer" : [],
-    "CellLine" : [],
-    "Dose" : [],
-    "Time" : [],
-    "Viability" : []
-    },
+validation_data = pd.read_csv(
+    "Data/FarnesiferolC&Umbelliprenin.csv"
+)
+
+print("Total validation samples:", len(validation_data))
+print()
+
+# Separate the validation data for each coumarin
+farnesiferolC_data = validation_data[
+    validation_data["Coumarin"] == "FarnesiferolC"
+].copy()
+
+umbelliprenin_data = validation_data[
+    validation_data["Coumarin"] == "Umbelliprenin"
+].copy()
+
+print("FarnesiferolC samples:", len(farnesiferolC_data))
+print("Umbelliprenin samples:", len(umbelliprenin_data))
+print()
+
+# Define which trained models should be tested
+validation_model_methods = [
+    "Kfold",
+    "GroupID",
+    "Coumarin"
 ]
 
-scopoletin_structural_features = {
-    "MW" : 192.17, # From PubChem
-    "LogP" : 1.5, # From PubChem
-    "NumHDonors" : 1, # From PubChem
-    "NumHAcceptors" : 4, # From PubChem
-    "RotatableBonds" : 1, # From PubChem
-    "TPSA" : 55.8, # From PubChem
-    "RingCounts" : 2, # From PubChem Figure
-    "fCsp3" : 0.10 # From SwissADME
-}
+# ===================================================================================
+# Validate FarnesiferolC
+# ===================================================================================
 
-print()
-print("=" * 70)
-print("TESTING THE MODEL ON IMPERATORIN SAMPLES")
-print("=" * 70)
-print()
+farnesiferolC_predictions, farnesiferolC_metrics = validate_new_coumarin(
+    coumarin_name="FarnesiferolC",
+    validation_data=farnesiferolC_data,
+    structural_features=validation_coumarins_structural_info["FarnesiferolC"],
+    model_methods=validation_model_methods
+)
 
-imperatorin_samples = [{
-    "Cancer" : [],
-    "CellLine" : [],
-    "Dose" : [],
-    "Time" : [],
-    "Viability" : []
-    },
-]
+# ===================================================================================
+# Validate Umbelliprenin
+# ===================================================================================
 
-imperatorin_structural_features = {
-    "MW" : 270.28, # From PubChem
-    "LogP" : 3.4, # From PubChem
-    "NumHDonors" : 0, # From PubChem
-    "NumHAcceptors" : 4, # From PubChem
-    "RotatableBonds" : 3, # From PubChem
-    "TPSA" : 48.7, # From PubChem
-    "RingCounts" : 3, # From PubChem Figure
-    "fCsp3" : 0.19 # From SwissADME
-}
-
+umbelliprenin_predictions, umbelliprenin_metrics = validate_new_coumarin(
+    coumarin_name="Umbelliprenin",
+    validation_data=umbelliprenin_data,
+    structural_features=validation_coumarins_structural_info["Umbelliprenin"],
+    model_methods=validation_model_methods
+)
 
 print()
 print("=" * 70)
