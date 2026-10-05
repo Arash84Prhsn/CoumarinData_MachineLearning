@@ -7,60 +7,92 @@ import seaborn as sns
 # All features Engineering will be done in this script, and kept separated from the general preProcessing
 
 # The first obvious feature to add will be the Molecular Weights (From PubChem)
-MWs = {"Auraptene": 298.4,
-       "Osthole": 244.28,
-       "Esculetin": 178.14,
-       "GalbanicAcid": 398.5,
-       "Umbelliprenin": 366.5};
+MWs = {"auraptene": 298.4,
+       "osthole": 244.28,
+       "esculetin": 178.14,
+       "galbanicacid": 398.5,
+       "umbelliprenin": 366.5,
+       "umbelliferone": 162.14,
+       "scopoletin": 192.17,
+       "imperatorin": 270.28,
+       "herniarin": 176.17};
 
 # The second Important Feature will be LogP (XLogP3 From PubChem)
-LogPs = {"Auraptene": 5.3,
-         "Osthole": 3.8,
-         "Esculetin": 1.2,
-         "GalbanicAcid": 5.1,
-         "Umbelliprenin": 7.1}
+LogPs = {"auraptene": 5.3,
+         "osthole": 3.8,
+         "esculetin": 1.2,
+         "galbanicacid": 5.1,
+         "umbelliprenin": 7.1,
+         "umbelliferone": 1.6,
+         "scopoletin": 1.5,
+         "imperatorin": 3.4,
+         "herniarin": 1.9}
 
 # Number of the Hydrogen bond donors
-numHDonors = {"Auraptene": 0,
-              "Osthole": 0,
-              "Esculetin": 2,
-              "GalbanicAcid": 1,
-              "Umbelliprenin": 0}
+numHDonors = {"auraptene": 0,
+              "osthole": 0,
+              "esculetin": 2,
+              "galbanicacid": 1,
+              "umbelliprenin": 1,
+              "umbelliferone": 0,
+              "scopoletin": 1,
+              "imperatorin": 0,
+              "herniarin": 0}
 
 # Number of the Hydrohen bond acceptors
-numHAcceptors = {"Auraptene": 3,
-                 "Osthole": 3,
-                 "Esculetin": 4,
-                 "GalbanicAcid": 5,
-                 "Umbelliprenin": 3}
+numHAcceptors = {"auraptene": 3,
+                 "osthole": 3,
+                 "esculetin": 4,
+                 "galbanicacid": 5,
+                 "umbelliprenin": 3,
+                 "umbelliferone": 3,
+                 "scopoletin": 4,
+                 "imperatorin": 4,
+                 "herniarin": 3}
 
 # Number of rotatable bonds
-rotatableBonds = {"Auraptene": 6,
-                  "Osthole": 3,
-                  "Esculetin": 0,
-                  "GalbanicAcid": 6,
-                  "Umbelliprenin": 9}
+rotatableBonds = {"auraptene": 6,
+                  "osthole": 3,
+                  "esculetin": 0,
+                  "galbanicacid": 6,
+                  "umbelliprenin": 9,
+                  "umbelliferone": 0,
+                  "scopoletin": 1,
+                  "imperatorin": 3,
+                  "herniarin": 1}
 
 # Topological Polar Surface Area (From PubChem)
-TPSAs = {"Auraptene": 35.5,
-         "Osthole": 35.5,
-         "Esculetin": 66.8,
-         "GalbanicAcid": 72.8,
-         "Umbelliprenin": 35.5}
+TPSAs = {"auraptene": 35.5,
+         "osthole": 35.5,
+         "esculetin": 66.8,
+         "galbanicacid": 72.8,
+         "umbelliprenin": 35.5,
+         "umbelliferone": 46.5,
+         "scopoletin": 55.8,
+         "imperatorin": 48.7,
+         "herniarin": 35.5}
 
 # Ring Counts
-ringCounts = {"Auraptene": 2,
-              "Osthole": 2,
-              "Esculetin": 2,
-              "GalbanicAcid": 3,
-              "Umbelliprenin": 2}
+ringCounts = {"auraptene": 2,
+              "osthole": 2,
+              "esculetin": 2,
+              "galbanicacid": 3,
+              "umbelliprenin": 2,
+              "umbelliferone": 2,
+              "scopoletin": 2,
+              "imperatorin": 2,
+              "herniarin": 2}
 
-# FractionCsp3: The fraction of carbon atoms that are sp3 hybridized.
-fCsp3s = {"Auraptene": 0.32,
-          "Osthole": 0.27,
-          "Esculetin": 0,
-          "GalbanicAcid": 0.5,
-          "Umbelliprenin": 0.38}
+# FractionCsp3: The fraction of carbon atoms that are sp3 hybridized. (From SwissAdme.ch)
+fCsp3s = {"auraptene": 0.32,
+          "osthole": 0.27,
+          "esculetin": 0,
+          "galbanicacid": 0.5,
+          "umbelliprenin": 0.38,
+          "umbelliferone": 0,
+          "scopoletin": 0.10,
+          "imperatorin": 0.19,
+          "herniarin": 0.10}
 
 
 # Read the data

@@ -770,7 +770,7 @@ def validate_new_coumarin(coumarin_name, validation_data, structural_features, m
         inplace=True
     )
 
-    metrics_results = []
+    metrics_results = []    
 
     # Test every saved model
     for method_name in model_methods:
