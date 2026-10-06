@@ -1,0 +1,583 @@
+Author,Cancer,CellLine,Coumarin,Dose,Time,Viability
+Chu 2017,Skin,B16F10,Herniarin,12.5,72h,97.6455313189856
+Chu 2017,Skin,B16F10,Herniarin,25,72h,82.5873241211107
+Chu 2017,Skin,B16F10,Herniarin,50,72h,83.3635207652529
+Chu 2017,Skin,B16F10,Herniarin,100,72h,65.3557550680079
+Chu 2017,Skin,B16F10,Herniarin,200,72h,49.6765852250999
+Chu 2017,Skin,B16F10,Herniarin,400,72h,32.2897732900224
+Chu 2017,Cervical,HeLa,Herniarin,12.5,72h,76.4044956395149
+Chu 2017,Cervical,HeLa,Herniarin,25,72h,67.5655425583538
+Chu 2017,Cervical,HeLa,Herniarin,50,72h,67.5655425583538
+Chu 2017,Cervical,HeLa,Herniarin,100,72h,53.1835232114462
+Chu 2017,Cervical,HeLa,Herniarin,200,72h,27.4157333095768
+Chu 2017,Cervical,HeLa,Herniarin,400,72h,12.4344607753389
+Chu 2017,Liver,HepG2,Herniarin,12.5,72h,87.675276986508
+Chu 2017,Liver,HepG2,Herniarin,25,72h,94.4649450719108
+Chu 2017,Liver,HepG2,Herniarin,50,72h,112.324723248098
+Chu 2017,Liver,HepG2,Herniarin,100,72h,65.0922507121427
+Chu 2017,Liver,HepG2,Herniarin,200,72h,47.9704714295173
+Chu 2017,Liver,HepG2,Herniarin,400,72h,31.1439187309525
+Mousavi 2015,Breast,MCF-7,Herniarin,0,72h,100
+Mousavi 2015,Breast,MCF-7,Herniarin,6.25,72h,96.0992892691141
+Mousavi 2015,Breast,MCF-7,Herniarin,12.5,72h,94.8581497324199
+Mousavi 2015,Breast,MCF-7,Herniarin,25,72h,84.2198514283573
+Mousavi 2015,Breast,MCF-7,Herniarin,50,72h,78.014180799478
+Mousavi 2015,Breast,MCF-7,Herniarin,100,72h,72.5177293811715
+Mousavi 2015,Breast,MCF-7,Herniarin,200,72h,47.6950333383587
+Haghighitalab 2013,Bbladder,TCC,Herniarin,56.7633535789295,24h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,113.526707157859,24h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,170.290060736788,24h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,227.053414315718,24h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,283.816767894647,24h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,340.580121473577,24h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,397.343475052506,24h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,454.106828631436,24h,95.4873169278013
+Haghighitalab 2013,Bbladder,TCC,Herniarin,510.870182210365,24h,95.9679595998616
+Haghighitalab 2013,Bbladder,TCC,Herniarin,567.633535789295,24h,95.6475250401571
+Haghighitalab 2013,Bbladder,TCC,Herniarin,56.7633535789295,48h,92.6984109363538
+Haghighitalab 2013,Bbladder,TCC,Herniarin,113.526707157859,48h,92.6984109363538
+Haghighitalab 2013,Bbladder,TCC,Herniarin,170.290060736788,48h,96.5079342172599
+Haghighitalab 2013,Bbladder,TCC,Herniarin,227.053414315718,48h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,283.816767894647,48h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,340.580121473577,48h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,397.343475052506,48h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,454.106828631436,48h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,510.870182210365,48h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,567.633535789295,48h,100
+Haghighitalab 2013,Bbladder,TCC,Herniarin,56.7633535789295,72h,89.156619818106
+Haghighitalab 2013,Bbladder,TCC,Herniarin,113.526707157859,72h,91.7269077556257
+Haghighitalab 2013,Bbladder,TCC,Herniarin,170.290060736788,72h,89.3172691337298
+Haghighitalab 2013,Bbladder,TCC,Herniarin,227.053414315718,72h,92.2088342543993
+Haghighitalab 2013,Bbladder,TCC,Herniarin,283.816767894647,72h,92.530120629591
+Haghighitalab 2013,Bbladder,TCC,Herniarin,340.580121473577,72h,96.8674683105952
+Haghighitalab 2013,Bbladder,TCC,Herniarin,397.343475052506,72h,98.6345372461217
+Haghighitalab 2013,Bbladder,TCC,Herniarin,454.106828631436,72h,96.3855356837937
+Haghighitalab 2013,Bbladder,TCC,Herniarin,510.870182210365,72h,91.0843380692562
+Haghighitalab 2013,Bbladder,TCC,Herniarin,567.633535789295,72h,96.0642554366299
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,4.78011479248448,48h,99.925511826484
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,0,48h,98.2867776921069
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,7.17017218872671,48h,98.2867776921069
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,12.4282911665833,48h,97.6908751454664
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,26.2906313586646,48h,96.5735568049576
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,51.6252361118941,48h,94.7858477442922
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,100.382410642174,48h,89.2737442152642
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,251.434030790807,48h,89.7951585883888
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,499.999999999999,48h,78.994414630137
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,0,72h,101.048688822865
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,3.35891047560891,72h,96.5543040713676
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,5.27830357997621,72h,94.2322093311492
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,10.5566071599524,72h,93.1086138576375
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,25.4318579570758,72h,93.9325812998402
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,50.3838767904045,72h,90.0374526109601
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,100.287896152372,72h,88.3146053610067
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,250.000009152344,72h,80.599250347716
+KIEŁBUS 2013,Laryngeal,RK33,Herniarin,499.999999999999,72h,76.1797765330403
+Valiahdi 2013,Lung,A549,Herniarin,1,96h,94.0776702939469
+Valiahdi 2013,Lung,A549,Herniarin,3.63736234254244,96h,89.7087381337565
+Valiahdi 2013,Lung,A549,Herniarin,6.34066025275929,96h,89.1262116235773
+Valiahdi 2013,Lung,A549,Herniarin,9.07692217403625,96h,87.0873743933346
+Valiahdi 2013,Lung,A549,Herniarin,28.0645102188761,96h,83.8834952535026
+Valiahdi 2013,Lung,A549,Herniarin,53.5483847150695,96h,87.6699009035138
+Valiahdi 2013,Lung,A549,Herniarin,80.645162348858,96h,84.1747529532076
+Valiahdi 2013,Lung,A549,Herniarin,166.176478013036,96h,82.135926833734
+Valiahdi 2013,Lung,A549,Herniarin,450.735535423675,96h,79.223305393607
+Valiahdi 2013,Melanoma,SK-MEL-28,Herniarin,1,96h,95.882350246249
+Valiahdi 2013,Melanoma,SK-MEL-28,Herniarin,3.46350351244496,96h,95.294112697192
+Valiahdi 2013,Melanoma,SK-MEL-28,Herniarin,6.32116909048433,96h,84.9999948576384
+Valiahdi 2013,Melanoma,SK-MEL-28,Herniarin,8.81751881522749,96h,83.2352934301655
+Valiahdi 2013,Melanoma,SK-MEL-28,Herniarin,27.0357240949358,96h,82.6470558811085
+Valiahdi 2013,Melanoma,SK-MEL-28,Herniarin,52.7500098092215,96h,73.2352887552913
+Valiahdi 2013,Melanoma,SK-MEL-28,Herniarin,79.7499901907784,96h,82.9411802654861
+Valiahdi 2013,Melanoma,SK-MEL-28,Herniarin,156.877473348881,96h,80.2941169045788
+Valiahdi 2013,Melanoma,SK-MEL-28,Herniarin,441.264074317672,96h,68.2352976375523
+Valiahdi 2013,Carcinoma,CH1,Herniarin,0.443636411304322,96h,102.431765084345
+Valiahdi 2013,Carcinoma,CH1,Herniarin,0.702181826807448,96h,102.431765084345
+Valiahdi 2013,Carcinoma,CH1,Herniarin,0.98363636136646,96h,102.431765084345
+Valiahdi 2013,Carcinoma,CH1,Herniarin,3.58545504483309,96h,101.629622582818
+Valiahdi 2013,Carcinoma,CH1,Herniarin,6.30181967995383,96h,97.481481411711
+Valiahdi 2013,Carcinoma,CH1,Herniarin,9.05090859153053,96h,96.2962917612197
+Valiahdi 2013,Carcinoma,CH1,Herniarin,26.9750996640622,96h,100.740735996352
+Valiahdi 2013,Carcinoma,CH1,Herniarin,52.9181566838794,96h,98.9629628234221
+Valiahdi 2013,Carcinoma,CH1,Herniarin,81.1032213694737,96h,89.1851877666903
+Tueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,0,24h,100
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,0.19,24h,98.6772487506677
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,0.39,24h,90.4761849497334
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,0.77,24h,71.6931212459326
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,1.54,24h,56.4814768327166
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,3.08,24h,41.6666668769124
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,0,48h,100
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,0.19,48h,92.7248681286728
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,0.39,48h,83.9947018096474
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,0.77,48h,69.5767263112549
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,1.54,48h,49.2063449613895
+ueanjai Khunluck 2018,Cholangio,KKU-100,umbelliferone,3.08,48h,24.0740737470253
+Chu 2017,Skin,B16F10,umbelliferone,12.5,72h,106.219355429372
+Chu 2017,Skin,B16F10,umbelliferone,25,72h,77.7290334393901
+Chu 2017,Skin,B16F10,umbelliferone,50,72h,76.7999976373488
+Chu 2017,Skin,B16F10,umbelliferone,100,72h,74.3225806451613
+Chu 2017,Skin,B16F10,umbelliferone,200,72h,61.9354838709677
+Chu 2017,Skin,B16F10,umbelliferone,400,72h,44.5935353925151
+Chu 2017,Cervical,HeLa,umbelliferone,12.5,72h,105.617977081278
+Chu 2017,Cervical,HeLa,umbelliferone,25,72h,109.962544115992
+Chu 2017,Cervical,HeLa,umbelliferone,50,72h,73.8576781657141
+Chu 2017,Cervical,HeLa,umbelliferone,100,72h,63.0711607980824
+Chu 2017,Cervical,HeLa,umbelliferone,200,72h,68.7640489330144
+Chu 2017,Cervical,HeLa,umbelliferone,400,72h,69.0636698117776
+Chu 2017,Liver,HepG2,umbelliferone,12.5,72h,91.8081197762323
+Chu 2017,Liver,HepG2,umbelliferone,25,72h,99.4833944166782
+Chu 2017,Liver,HepG2,umbelliferone,50,72h,111.439115285417
+Chu 2017,Liver,HepG2,umbelliferone,100,72h,71.8819216128201
+Chu 2017,Liver,HepG2,umbelliferone,200,72h,46.7896720737084
+Chu 2017,Liver,HepG2,umbelliferone,400,72h,35.5719627672664
+Mousavi 2015,Breast,MCF-7,umbelliferone,0,72h,100
+Mousavi 2015,Breast,MCF-7,umbelliferone,6.25,72h,99.0740752405481
+Mousavi 2015,Breast,MCF-7,umbelliferone,12.5,72h,97.7777775161387
+Mousavi 2015,Breast,MCF-7,umbelliferone,25,72h,90.1851841277273
+Mousavi 2015,Breast,MCF-7,umbelliferone,50,72h,90.0000017660635
+Mousavi 2015,Breast,MCF-7,umbelliferone,100,72h,81.6666648024884
+Mousavi 2015,Breast,MCF-7,umbelliferone,200,72h,68.7037016869027
+Haghighitalab 2013,Bladder,TCC,umbelliferone,61.6750955963982,24h,100.099011219175
+Haghighitalab 2013,Bladder,TCC,umbelliferone,123.350191192796,24h,100.099011219175
+Haghighitalab 2013,Bladder,TCC,umbelliferone,185.025286789195,24h,100.099011219175
+Haghighitalab 2013,Bladder,TCC,umbelliferone,246.700382385593,24h,100.099011219175
+Haghighitalab 2013,Bladder,TCC,umbelliferone,308.375477981991,24h,100.099011219175
+Haghighitalab 2013,Bladder,TCC,umbelliferone,370.050573578389,24h,100.099011219175
+Haghighitalab 2013,Bladder,TCC,umbelliferone,431.725669174787,24h,100.099011219175
+Haghighitalab 2013,Bladder,TCC,umbelliferone,493.400764771185,24h,87.9207870588855
+Haghighitalab 2013,Bladder,TCC,umbelliferone,555.075860367584,24h,85.9901008609695
+Haghighitalab 2013,Bladder,TCC,umbelliferone,616.750955963982,24h,83.9108935852468
+Haghighitalab 2013,Bladder,TCC,umbelliferone,61.6750955963982,48h,96.9801988892432
+Haghighitalab 2013,Bladder,TCC,umbelliferone,123.350191192796,48h,89.8514845875849
+Haghighitalab 2013,Bladder,TCC,umbelliferone,185.025286789195,48h,81.386140072279
+Haghighitalab 2013,Bladder,TCC,umbelliferone,246.700382385593,48h,81.089109247449
+Haghighitalab 2013,Bladder,TCC,umbelliferone,308.375477981991,48h,80.3465350180697
+Haghighitalab 2013,Bladder,TCC,umbelliferone,370.050573578389,48h,78.8613865593112
+Haghighitalab 2013,Bladder,TCC,umbelliferone,431.725669174787,48h,79.0098991390304
+Haghighitalab 2013,Bladder,TCC,umbelliferone,493.400764771185,48h,72.3267310746171
+Haghighitalab 2013,Bladder,TCC,umbelliferone,555.075860367584,48h,71.1386134406887
+Haghighitalab 2013,Bladder,TCC,umbelliferone,616.750955963982,48h,71.1386134406887
+Haghighitalab 2013,Bladder,TCC,umbelliferone,61.6750955963982,72h,91.7821792835885
+Haghighitalab 2013,Bladder,TCC,umbelliferone,123.350191192796,72h,86.5841596779338
+Haghighitalab 2013,Bladder,TCC,umbelliferone,185.025286789195,72h,80.7920784226189
+Haghighitalab 2013,Bladder,TCC,umbelliferone,246.700382385593,72h,79.0098991390304
+Haghighitalab 2013,Bladder,TCC,umbelliferone,308.375477981991,72h,80.1980224383506
+Haghighitalab 2013,Bladder,TCC,umbelliferone,370.050573578389,72h,79.1584173841413
+Haghighitalab 2013,Bladder,TCC,umbelliferone,431.725669174787,72h,73.2178235491073
+Haghighitalab 2013,Bladder,TCC,umbelliferone,493.400764771185,72h,70.0990083864794
+Haghighitalab 2013,Bladder,TCC,umbelliferone,555.075860367584,72h,69.3564341571001
+Haghighitalab 2013,Bladder,TCC,umbelliferone,616.750955963982,72h,66.3861372395831
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,0.939853128431526,48h,101.831501882685
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,4.22933011483814,48h,102.197802259223
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,2.81955938529458,48h,100
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,4.6992477159502,48h,98.3882777843064
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,26.3157979650456,48h,97.0695969877025
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,50.7518717470207,48h,93.8461525563153
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,100.563908291817,48h,94.4322312025197
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,250.939835202224,48h,89.8168498117314
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,500,48h,81.025639377514
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,0,72h,102.450450820743
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,1.85357509768577,72h,92.5045042209023
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,4.17053513129187,72h,87.4594606372135
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,9.73122507034476,72h,85.8738745290073
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,24.5597728208242,72h,86.8108108999783
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,49.582948254571,72h,85.8738745290073
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,100.092684057984,72h,81.837836912725
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,250.695086242381,72h,80.8288295706529
+KIEŁBUS 2013,Laryngeal,RK33,umbelliferone,500,72h,58.126127258058
+Rashidi 2016,colon,HT29,umbelliferone,18.5025286789195,24h,99.132530373263
+Rashidi 2016,colon,HT29,umbelliferone,37.0050573578389,24h,98.3373478809035
+Rashidi 2016,colon,HT29,umbelliferone,74.0101147156778,24h,89.590359423534
+Rashidi 2016,colon,HT29,umbelliferone,154.187738990995,24h,71.0361425560641
+Rashidi 2016,colon,HT29,umbelliferone,308.375477981991,24h,29.4216827024896
+Rashidi 2016,colon,HT29,umbelliferone,616.750955963982,24h,15.63854815012
+Rashidi 2016,colon,HT29,umbelliferone,1233.50191192796,24h,6.09638351991952
+Rashidi 2016,colon,HT29,umbelliferone,18.5025286789195,48h,99.132530373263
+Rashidi 2016,colon,HT29,umbelliferone,37.0050573578389,48h,89.8554206756224
+Rashidi 2016,colon,HT29,umbelliferone,74.0101147156778,48h,91.9759031088955
+Rashidi 2016,colon,HT29,umbelliferone,154.187738990995,48h,63.8795190834137
+Rashidi 2016,colon,HT29,umbelliferone,308.375477981991,48h,25.5783071862646
+Rashidi 2016,colon,HT29,umbelliferone,616.750955963982,48h,18.6867449657026
+Rashidi 2016,colon,HT29,umbelliferone,1233.50191192796,48h,8.74698592955809
+Rashidi 2016,colon,HT29,umbelliferone,18.5025286789195,72h,99.2650597354015
+Rashidi 2016,colon,HT29,umbelliferone,37.0050573578389,72h,95.2891561209437
+Rashidi 2016,colon,HT29,umbelliferone,74.0101147156778,72h,91.4457831325301
+Rashidi 2016,colon,HT29,umbelliferone,154.187738990995,72h,76.4698805291968
+Rashidi 2016,colon,HT29,umbelliferone,308.375477981991,72h,26.7710802928511
+Rashidi 2016,colon,HT29,umbelliferone,616.750955963982,72h,10.3373433308429
+Rashidi 2016,colon,HT29,umbelliferone,1233.50191192796,72h,3.57830920851374
+Rashidi 2016,Breast,MCF-7,umbelliferone,18.5025286789195,24h,99.5817981923003
+Rashidi 2016,Breast,MCF-7,umbelliferone,37.0050573578389,24h,97.9581808514974
+Rashidi 2016,Breast,MCF-7,umbelliferone,74.0101147156778,24h,98.7699895218988
+Rashidi 2016,Breast,MCF-7,umbelliferone,154.187738990995,24h,59.261994229273
+Rashidi 2016,Breast,MCF-7,umbelliferone,308.375477981991,24h,41.6728175534733
+Rashidi 2016,Breast,MCF-7,umbelliferone,616.750955963982,24h,20.1598942395077
+Rashidi 2016,Breast,MCF-7,umbelliferone,1233.50191192796,24h,12.1771223140151
+Rashidi 2016,Breast,MCF-7,umbelliferone,18.5025286789195,48h,98.7699895218988
+Rashidi 2016,Breast,MCF-7,umbelliferone,37.0050573578389,48h,97.8228789763191
+Rashidi 2016,Breast,MCF-7,umbelliferone,74.0101147156778,48h,93.222633284936
+Rashidi 2016,Breast,MCF-7,umbelliferone,154.187738990995,48h,65.0799516359239
+Rashidi 2016,Breast,MCF-7,umbelliferone,308.375477981991,48h,30.9840029630767
+Rashidi 2016,Breast,MCF-7,umbelliferone,616.750955963982,48h,16.7773602633924
+Rashidi 2016,Breast,MCF-7,umbelliferone,1233.50191192796,48h,8.38868013169621
+Rashidi 2016,Breast,MCF-7,umbelliferone,18.5025286789195,72h,98.3640864770324
+Rashidi 2016,Breast,MCF-7,umbelliferone,37.0050573578389,72h,96.1992642161849
+Rashidi 2016,Breast,MCF-7,umbelliferone,74.0101147156778,72h,94.7109487505604
+Rashidi 2016,Breast,MCF-7,umbelliferone,154.187738990995,72h,89.4341962639543
+Rashidi 2016,Breast,MCF-7,umbelliferone,308.375477981991,72h,53.8499398674885
+Rashidi 2016,Breast,MCF-7,umbelliferone,616.750955963982,72h,18.1303738538385
+Rashidi 2016,Breast,MCF-7,umbelliferone,1233.50191192796,72h,9.33578551593871
+Rashidi 2016,Glioma,A172,umbelliferone,19.2734673738744,24h,96.7567554585083
+Rashidi 2016,Glioma,A172,umbelliferone,38.5469347477489,24h,99.054053743741
+Rashidi 2016,Glioma,A172,umbelliferone,77.0938694954977,24h,94.0540528064689
+Rashidi 2016,Glioma,A172,umbelliferone,154.187738990995,24h,72.2972959420526
+Rashidi 2016,Glioma,A172,umbelliferone,308.375477981991,24h,47.9729720736984
+Rashidi 2016,Glioma,A172,umbelliferone,616.750955963982,24h,25.4054090531668
+Rashidi 2016,Glioma,A172,umbelliferone,1233.50191192796,24h,20.1351368196916
+Rashidi 2016,Glioma,A172,umbelliferone,19.2734673738744,48h,101.216216380872
+Rashidi 2016,Glioma,A172,umbelliferone,38.5469347477489,48h,97.8378380658229
+Rashidi 2016,Glioma,A172,umbelliferone,77.0938694954977,48h,90.8108101395213
+Rashidi 2016,Glioma,A172,umbelliferone,154.187738990995,48h,72.2972959420526
+Rashidi 2016,Glioma,A172,umbelliferone,308.375477981991,48h,33.6486500798883
+Rashidi 2016,Glioma,A172,umbelliferone,616.750955963982,48h,12.2972950047805
+Rashidi 2016,Glioma,A172,umbelliferone,1233.50191192796,48h,5.54053837468218
+Rashidi 2016,Glioma,A172,umbelliferone,19.2734673738744,72h,98.5135137288327
+Rashidi 2016,Glioma,A172,umbelliferone,38.5469347477489,72h,93.9189197358654
+Rashidi 2016,Glioma,A172,umbelliferone,77.0938694954977,72h,90.4054057727147
+Rashidi 2016,Glioma,A172,umbelliferone,154.187738990995,72h,69.4594602194097
+Rashidi 2016,Glioma,A172,umbelliferone,308.375477981991,72h,42.7027049952194
+Rashidi 2016,Glioma,A172,umbelliferone,616.750955963982,72h,19.1891847054824
+Rashidi 2016,Glioma,A172,umbelliferone,1233.50191192796,72h,10.9459436787608
+X. Wang 2019,Kidney,786-O,umbelliferone,0,24h,100
+X. Wang 2019,Kidney,786-O,umbelliferone,5,24h,99.0825652755095
+X. Wang 2019,Kidney,786-O,umbelliferone,25,24h,94.0366830401178
+X. Wang 2019,Kidney,786-O,umbelliferone,50,24h,95.4128438761594
+X. Wang 2019,Kidney,786-O,umbelliferone,100,24h,96.330261102038
+X. Wang 2019,Kidney,786-O,umbelliferone,150,24h,94.4954091516689
+X. Wang 2019,Kidney,786-O,umbelliferone,0,48h,100
+X. Wang 2019,Kidney,786-O,umbelliferone,5,48h,95.4545478796549
+X. Wang 2019,Kidney,786-O,umbelliferone,25,48h,88.8111588704123
+X. Wang 2019,Kidney,786-O,umbelliferone,50,48h,80.4195713720561
+X. Wang 2019,Kidney,786-O,umbelliferone,100,48h,62.9370529568041
+X. Wang 2019,Kidney,786-O,umbelliferone,150,48h,44.4055861042576
+X. Wang 2019,Kidney,786-O,umbelliferone,0,72h,100
+X. Wang 2019,Kidney,786-O,umbelliferone,5,72h,93.7823792208489
+X. Wang 2019,Kidney,786-O,umbelliferone,25,72h,82.1243476719182
+X. Wang 2019,Kidney,786-O,umbelliferone,50,72h,64.2487052264717
+X. Wang 2019,Kidney,786-O,umbelliferone,100,72h,38.3419585684332
+X. Wang 2019,Kidney,786-O,umbelliferone,150,72h,30.5699375358123
+X. Wang 2019,Kidney,786-O,umbelliferone,0,96h,100
+X. Wang 2019,Kidney,786-O,umbelliferone,5,96h,92.3636411178213
+X. Wang 2019,Kidney,786-O,umbelliferone,25,96h,83.0909121868041
+X. Wang 2019,Kidney,786-O,umbelliferone,50,96h,60.9090903100883
+X. Wang 2019,Kidney,786-O,umbelliferone,100,96h,16.7272689188803
+X. Wang 2019,Kidney,786-O,umbelliferone,150,96h,14.7272714851314
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,0,24h,100
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,5,24h,100.638457910061
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,25,24h,96.488408427838
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,50,24h,97.7653486035689
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,100,24h,102.873084950884
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,150,24h,99.0422887792998
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,0,48h,100
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,5,48h,97.4262718484353
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,25,48h,96.7828418559584
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,50,48h,96.5683597373614
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,100,48h,90.1340434492783
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,150,48h,61.8230583270377
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,0,72h,100
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,5,72h,93.4297993246195
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,25,72h,93.4297993246195
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,50,72h,84.2002309987924
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,100,72h,72.6241688254626
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,150,72h,62.143123190233
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,0,96h,100
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,5,96h,92.0882451944662
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,25,96h,91.6317990296145
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,50,96h,86.3065802302783
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,100,96h,81.7421069737044
+X. Wang 2019,Kidney,OS-RT-2,umbelliferone,150,96h,76.1125887964576
+X. Wang 2019,Kidney,ACHN,umbelliferone,0,24h,100
+X. Wang 2019,Kidney,ACHN,umbelliferone,5,24h,97.8146552304056
+X. Wang 2019,Kidney,ACHN,umbelliferone,25,24h,99.2715610061906
+X. Wang 2019,Kidney,ACHN,umbelliferone,50,24h,97.8146552304056
+X. Wang 2019,Kidney,ACHN,umbelliferone,100,24h,97.8146552304056
+X. Wang 2019,Kidney,ACHN,umbelliferone,150,24h,95.2650631757402
+X. Wang 2019,Kidney,ACHN,umbelliferone,0,48h,100
+X. Wang 2019,Kidney,ACHN,umbelliferone,5,48h,93.5057181726521
+X. Wang 2019,Kidney,ACHN,umbelliferone,25,48h,90.5291633030241
+X. Wang 2019,Kidney,ACHN,umbelliferone,50,48h,82.6819048046798
+X. Wang 2019,Kidney,ACHN,umbelliferone,100,48h,77.8111908535708
+X. Wang 2019,Kidney,ACHN,umbelliferone,150,48h,73.7522608405811
+X. Wang 2019,Kidney,ACHN,umbelliferone,0,72h,100
+X. Wang 2019,Kidney,ACHN,umbelliferone,5,72h,96.2999241119395
+X. Wang 2019,Kidney,ACHN,umbelliferone,25,72h,88.5473758344237
+X. Wang 2019,Kidney,ACHN,umbelliferone,50,72h,77.9757227585072
+X. Wang 2019,Kidney,ACHN,umbelliferone,100,72h,69.1660118619097
+X. Wang 2019,Kidney,ACHN,umbelliferone,150,72h,58.9467485661122
+X. Wang 2019,Kidney,ACHN,umbelliferone,0,96h,100
+X. Wang 2019,Kidney,ACHN,umbelliferone,5,96h,95.9472053340086
+X. Wang 2019,Kidney,ACHN,umbelliferone,25,96h,88.540373794974
+X. Wang 2019,Kidney,ACHN,umbelliferone,50,96h,74.2857137526045
+X. Wang 2019,Kidney,ACHN,umbelliferone,100,96h,64.6428540774752
+X. Wang 2019,Kidney,ACHN,umbelliferone,150,96h,43.8198750462688
+Chen 2025,Lung,A549,Scopoletin,0,24h,100
+Chen 2025,Lung,A549,Scopoletin,20,24h,92.6715375709319
+Chen 2025,Lung,A549,Scopoletin,40,24h,85.3138687619137
+Chen 2025,Lung,A549,Scopoletin,60,24h,70.2481782140776
+Chen 2025,Lung,A549,Scopoletin,80,24h,61.3138744421927
+Chen 2025,Lung,A549,Scopoletin,100,24h,52.7299302827886
+Chen 2025,Lung,A549,Scopoletin,120,24h,46.598530141475
+Chen 2025,Lung,A549,Scopoletin,0,48h,100
+Chen 2025,Lung,A549,Scopoletin,20,48h,84.7883226605113
+Chen 2025,Lung,A549,Scopoletin,40,48h,65.693436425015
+Chen 2025,Lung,A549,Scopoletin,60,48h,41.6934354226128
+Chen 2025,Lung,A549,Scopoletin,80,48h,30.8321136859961
+Chen 2025,Lung,A549,Scopoletin,100,48h,21.3722704953901
+Chen 2025,Lung,A549,Scopoletin,120,48h,13.48905892631
+ Zhu 2023,ALL,Jurkat,Scopoletin,0,72h,100.311172186433
+ Zhu 2023,ALL,Jurkat,Scopoletin,0.449799642238116,72h,96.4073481481081
+ Zhu 2023,ALL,Jurkat,Scopoletin,0.963855325705599,72h,95.2192345448616
+ Zhu 2023,ALL,Jurkat,Scopoletin,1.99196791824599,72h,93.5219219976711
+ Zhu 2023,ALL,Jurkat,Scopoletin,4,72h,79.9434248575137
+ Zhu 2023,ALL,Jurkat,Scopoletin,8,72h,56.0113140572872
+ Zhu 2023,ALL,Jurkat,Scopoletin,16,72h,53.2956165716758
+ Zhu 2023,ALL,Jurkat,Scopoletin,32,72h,14.2574279862937
+Wang 2025,Ovarian,A2780,Scopoletin,0,24h,100
+Wang 2025,Ovarian,A2780,Scopoletin,5,24h,85.7541832471918
+Wang 2025,Ovarian,A2780,Scopoletin,10,24h,79.3296042358058
+Wang 2025,Ovarian,A2780,Scopoletin,25,24h,67.3184329265921
+Wang 2025,Ovarian,A2780,Scopoletin,50,24h,50.2793200248701
+Wang 2025,Ovarian,A2780,Scopoletin,75,24h,42.1787675863674
+Wang 2025,Ovarian,A2780,Scopoletin,100,24h,34.0782044922856
+Seo 2016,leukemia, CCRF-CEM,Scopoletin,0.001,48h,100
+Seo 2016,leukemia, CCRF-CEM,Scopoletin,0.01,48h,89.4909693618735
+Seo 2016,leukemia, CCRF-CEM,Scopoletin,0.1,48h,89.4909693618735
+Seo 2016,leukemia, CCRF-CEM,Scopoletin,1,48h,87.3563205071079
+Seo 2016,leukemia, CCRF-CEM,Scopoletin,10,48h,80.6239748588272
+Seo 2016,leukemia, CCRF-CEM,Scopoletin,100,48h,6.73234564828072
+ Trop J Pharm Res 2015,Prostate,LNCaP,Scopoletin,0,48h,96.9738653106004
+Trop J Pharm Res 2015,Prostate,LNCaP,Scopoletin,20,48h,85.1719354044271
+Trop J Pharm Res 2015,Prostate,LNCaP,Scopoletin,40,48h,77.9092190761407
+Trop J Pharm Res 2015,Prostate,LNCaP,Scopoletin,60,48h,55.2132146775378
+Trop J Pharm Res 2015,Prostate,LNCaP,Scopoletin,80,48h,12.5447028588374
+Trop J Pharm Res 2015,Prostate,LNCaP,Scopoletin,100,48h,8.4594227597162
+ Qi Tian 2019,Cervical,HeLa,Scopoletin,0,24h,100.057306261407
+Qi Tian 2019,Cervical,HeLa,Scopoletin,3.56,24h,67.0487095024189
+Qi Tian 2019,Cervical,HeLa,Scopoletin,6.12,24h,58.2808039600054
+Qi Tian 2019,Cervical,HeLa,Scopoletin,12.5,24h,37.134673813194
+Qi Tian 2019,Cervical,HeLa,Scopoletin,25,24h,23.7249332243539
+Qi Tian 2019,Cervical,HeLa,Scopoletin,50,24h,15.3008619712753
+Qi Tian 2019,Cervical,HeLa,Scopoletin,100,24h,6.5329564288619
+ Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,0,24h,100
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,250,24h,90.3499004402743
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,300,24h,87.1086553892376
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,350,24h,85.082872885482
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,400,24h,82.8545152224496
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,450,24h,77.5874760760369
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,500,24h,73.1307530222252
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,0,48h,100
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,250,48h,89.742174962444
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,300,48h,83.6648235873037
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,350,48h,81.0313078779708
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,400,48h,79.208100533492
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,450,48h,74.3462271611267
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,500,48h,67.0534055109584
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,0,72h,100
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,250,72h,83.0570903817264
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,300,72h,77.7900589630607
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,350,72h,74.953960366704
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,400,72h,68.0662967628362
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,450,72h,59.1528583829598
+Md. Ali Asgar 2015, Cholangio,KKU-100,Scopoletin,500,72h,47.2007385197029
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,0,24h,100
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,250,24h,95.1509774720464
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,300,24h,86.3587935218044
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,350,24h,81.0834816610139
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,400,24h,76.3943139062608
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,450,24h,70.3374790551625
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,500,24h,65.6483113004095
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,0,48h,100
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,250,48h,89.0941314411081
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,300,48h,83.6234444226607
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,350,48h,77.1758443497952
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,400,48h,72.8774418168093
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,450,48h,67.0159858499813
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,500,48h,56.0746043598597
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,0,72h,100
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,250,72h,86.7495550169582
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,300,72h,79.1296630054045
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,350,72h,73.0728281543063
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,400,72h,67.2113721874783
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,450,72h,61.3499162206503
+Md. Ali Asgar 2015, Cholangio,KKU-M214,Scopoletin,500,72h,47.477799293888
+Tueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,0,24h,100
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,0.08,24h,90.7216438591855
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,0.16,24h,85.8247426861417
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,0.33,24h,79.7680359348405
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,0.65,24h,72.2938152501859
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,1.3,24h,59.2783585987379
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,2.6,24h,51.6752542414542
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,0,48h,100
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,0.08,48h,89.6907219535576
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,0.16,48h,83.5051511930146
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,0.33,48h,75.644328648941
+ueanjai Khunluck 2018,Cholangio,KKU-100,Scopoletin,0.65,48h,59.2783585987379
+ueanjai Khunluck 2018,Cholangio,KKU-101,Scopoletin,1.3,48h,41.7525780544308
+ueanjai Khunluck 2018,Cholangio,KKU-102,Scopoletin,2.6,48h,20.2319566913893
+ Grabarska 2020,Larynx,A549,Imperatorin,0,72h,100
+ Grabarska 2020,Larynx,A549,Imperatorin,0.97759731731233,72h,88.4036164478252
+ Grabarska 2020,Larynx,A549,Imperatorin,2.52545844151677,72h,85.5421684324386
+ Grabarska 2020,Larynx,A549,Imperatorin,5.01018353199151,72h,86.5963864246877
+ Grabarska 2020,Larynx,A549,Imperatorin,10,72h,82.8313262702453
+,,,,,,
+ Grabarska 2020,Larynx,A549,Imperatorin,50,72h,83.1325322316059
+ Grabarska 2020,Larynx,A549,Imperatorin,75.3056281239244,72h,81.9277083861636
+ Grabarska 2020,Larynx,A549,Imperatorin,100.244513691404,72h,80.4216843243866
+ Grabarska 2020,Larynx,A549,Imperatorin,200,72h,71.9879518764461
+ Grabarska 2020,Larynx,H1299,Imperatorin,0,72h,99.3098096694266
+ Grabarska 2020,Larynx,H1299,Imperatorin,1.01871128746661,72h,96.817487186391
+ Grabarska 2020,Larynx,H1299,Imperatorin,2.51559287173489,72h,93.7500018283633
+ Grabarska 2020,Larynx,H1299,Imperatorin,5.01039524782326,72h,93.9417203488763
+ Grabarska 2020,Larynx,H1299,Imperatorin,10,72h,93.1748462668243
+,,,,,,
+ Grabarska 2020,Larynx,H1299,Imperatorin,50,72h,94.1334352126626
+ Grabarska 2020,Larynx,H1299,Imperatorin,74.75726672106,72h,90.6825091568822
+ Grabarska 2020,Larynx,H1299,Imperatorin,100.242705502016,72h,91.0659535113615
+ Grabarska 2020,Larynx,H1299,Imperatorin,200,72h,91.8328239366868
+ Grabarska 2020,Larynx,H2170,Imperatorin,0,72h,100.301652350716
+ Grabarska 2020,Larynx,H2170,Imperatorin,0.999999532894213,72h,89.3665181965078
+ Grabarska 2020,Larynx,H2170,Imperatorin,2.51020392593072,72h,88.423833473685
+ Grabarska 2020,Larynx,H2170,Imperatorin,5,72h,88.423833473685
+ Grabarska 2020,Larynx,H2170,Imperatorin,10,72h,86.7269980957584
+,,,,,,
+ Grabarska 2020,Larynx,H2170,Imperatorin,50,72h,74.8491684305565
+ Grabarska 2020,Larynx,H2170,Imperatorin,75.5924351835882,72h,70.889895471546
+ Grabarska 2020,Larynx,H2170,Imperatorin,100.118481612977,72h,63.3484176889632
+ Grabarska 2020,Larynx,H2170,Imperatorin,200,72h,52.6018104103601
+ Grabarska 2020,Larynx,RK33,Imperatorin,0,72h,101.914416639731
+ Grabarska 2020,Larynx,RK33,Imperatorin,0.997963604371316,72h,94.9699710020012
+ Grabarska 2020,Larynx,RK33,Imperatorin,2.50509137753373,72h,96.283786202607
+ Grabarska 2020,Larynx,RK33,Imperatorin,5.01018353199152,72h,95.7207210109795
+ Grabarska 2020,Larynx,RK33,Imperatorin,10,72h,94.5945977874413
+,,,,,,
+ Grabarska 2020,Larynx,RK33,Imperatorin,50,72h,72.6351340708529
+ Grabarska 2020,Larynx,RK33,Imperatorin,75.236963225954,72h,57.8078115489211
+ Grabarska 2020,Larynx,RK33,Imperatorin,100.118481612977,72h,14.8273296816486
+ Grabarska 2020,Larynx,RK33,Imperatorin,200,72h,9.00901442717311
+ Grabarska 2020,Larynx,PK45,Imperatorin,0,72h,100.148367805569
+ Grabarska 2020,Larynx,PK45,Imperatorin,1.00603612464249,72h,97.9228507220297
+ Grabarska 2020,Larynx,PK45,Imperatorin,2.51509031160624,72h,97.7373830059912
+ Grabarska 2020,Larynx,PK45,Imperatorin,5.05030103868747,72h,90.6899140101331
+ Grabarska 2020,Larynx,PK45,Imperatorin,10,72h,88.6498540305296
+,,,,,,
+ Grabarska 2020,Larynx,PK45,Imperatorin,50,72h,75.8531157663653
+ Grabarska 2020,Larynx,PK45,Imperatorin,75.0000223867219,72h,68.8056396957722
+ Grabarska 2020,Larynx,PK45,Imperatorin,100.000017909377,72h,65.8382835843861
+ Grabarska 2020,Larynx,PK45,Imperatorin,200,72h,41.7284921864857
+ Grabarska 2020,Larynx,TE671,Imperatorin,0,72h,100.148811870066
+ Grabarska 2020,Larynx,TE671,Imperatorin,0.991903188847678,72h,92.41071525505
+ Grabarska 2020,Larynx,TE671,Imperatorin,2.48987850343087,72h,91.8154748705745
+ Grabarska 2020,Larynx,TE671,Imperatorin,5.00000038610298,72h,91.3690474205344
+ Grabarska 2020,Larynx,TE671,Imperatorin,10,72h,91.3690474205344
+,,,,,,
+ Grabarska 2020,Larynx,TE671,Imperatorin,50,72h,78.1250027939678
+ Grabarska 2020,Larynx,TE671,Imperatorin,75.0588181439567,72h,69.6428585366732
+ Grabarska 2020,Larynx,TE671,Imperatorin,100.117663215188,72h,53.7202265033338
+ Grabarska 2020,Larynx,TE671,Imperatorin,200,72h,27.8273833113091
+Ba˛dziul2014,Cervical carcinoma,HeLa,Imperatorin,0,24h,100
+Ba˛dziul2014,Cervical carcinoma,HeLa,Imperatorin,50,24h,96.2742175009673
+Ba˛dziul2014,Cervical carcinoma,HeLa,Imperatorin,100,24h,90.7600582653803
+Ba˛dziul2014,Cervical carcinoma,HeLa,Imperatorin,0,48h,100
+Ba˛dziul2014,Cervical carcinoma,HeLa,Imperatorin,50,48h,70.6408327706039
+Ba˛dziul2014,Cervical carcinoma,HeLa,Imperatorin,100,48h,92.6974640278587
+Ba˛dziul2014,Laryngeal,Hep-2,Imperatorin,0,24h,100
+Ba˛dziul2014,Laryngeal,Hep-2,Imperatorin,50,24h,87.7435293083387
+Ba˛dziul2014,Laryngeal,Hep-2,Imperatorin,100,24h,103.131937318835
+Ba˛dziul2014,Laryngeal,Hep-2,Imperatorin,0,48h,100
+Ba˛dziul2014,Laryngeal,Hep-2,Imperatorin,50,48h,86.4118406691816
+Ba˛dziul2014,Laryngeal,Hep-2,Imperatorin,100,48h,90.8508018589663
+ Sancho 2004,Melanoma*,MT-2,Imperatorin,10,24h,58.9101623339093
+ Sancho 2004,Melanoma,MT-2,Imperatorin,25,24h,37.5552284878672
+ Sancho 2004,Melanoma,MT-2,Imperatorin,50,24h,25.1840921505019
+Sancho 2004,ALL,jurkata,Imperatorin,0,24h,97.5285148628877
+Sancho 2004,ALL,jurkata,Imperatorin,10,24h,92.7756630139851
+Sancho 2004,ALL,jurkata,Imperatorin,25,24h,89.1634963340468
+Sancho 2004,ALL,jurkata,Imperatorin,50,24h,81.3688222027571
+Sancho 2004,ALL,jurkata,Imperatorin,100,24h,14.6387778927988
+Sancho 2004,ALL,jurkata,Imperatorin,0,48h,97.7186296620714
+Sancho 2004,ALL,jurkata,Imperatorin,10,48h,97.3384000637039
+Sancho 2004,ALL,jurkata,Imperatorin,25,48h,96.0075964694177
+Sancho 2004,ALL,jurkata,Imperatorin,50,48h ,78.5171110934155
+Sancho 2004,ALL,jurkata,Imperatorin,100,48h,9.50570369780519
+Sancho 2004,ALL,jurkata,Imperatorin,0,72h,95.6273741233267
+Sancho 2004,ALL,jurkata,Imperatorin,10,72h,85.9315592524759
+Sancho 2004,ALL,jurkata,Imperatorin,25,72h,93.3460074115363
+Sancho 2004,ALL,jurkata,Imperatorin,50,72h,62.5475259801922
+Sancho 2004,ALL,jurkata,Imperatorin,100,72h,5.51329654108477
+Sancho 2004,Cervical *,HeLa,Imperatorin,0,24h,78.7072222664611
+Sancho 2004,Cervical ,HeLa,Imperatorin,10,24h,81.1787037774351
+Sancho 2004,Cervical ,HeLa,Imperatorin,25,24h,80.6083630060221
+Sancho 2004,Cervical ,HeLa,Imperatorin,50,24h,73.1939112208235
+Sancho 2004,Cervical ,HeLa,Imperatorin,100,24h,51.5209111411935
+Sancho 2004,Cervical ,HeLa,Imperatorin,0,48h,75.475281558752
+Sancho 2004,Cervical ,HeLa,Imperatorin,10,48h,75.6653999840739
+Sancho 2004,Cervical ,HeLa,Imperatorin,25,48h,75.475281558752
+Sancho 2004,Cervical ,HeLa,Imperatorin,50,48h,68.8212889702884
+Sancho 2004,Cervical ,HeLa,Imperatorin,100,48h,31.5589333758026
+Sancho 2004,Cervical ,HeLa,Imperatorin,0,72h,71.4828889065844
+Sancho 2004,Cervical ,HeLa,Imperatorin,10,72h,56.0836445647742
+Sancho 2004,Cervical ,HeLa,Imperatorin,25,72h,49.4296519763105
+Sancho 2004,Cervical ,HeLa,Imperatorin,50,72h,35.5513260279702
+Sancho 2004,Cervical ,HeLa,Imperatorin,100,72h,20.722422457573
+Liang 2018,Breast,MDA-MB-231,Imperatorin,32.1126577131008,24h,95.9409558796795
+Liang 2018,Breast,MDA-MB-231,Imperatorin,63.0985720961817,24h,92.3739185291326
+Liang 2018,Breast,MDA-MB-231,Imperatorin,125.633794018605,24h,81.1808090919668
+Liang 2018,Breast,MDA-MB-231,Imperatorin,250.704194880948,24h,57.9335760244695
+Liang 2018,Breast,MDA-MB-231,Imperatorin,500.281710905631,24h,54.2435393275413
+Liang 2018,Breast,MDA-MB-231,Imperatorin,32.1126577131008,48h,67.527670498058
+Liang 2018,Breast,MDA-MB-231,Imperatorin,62.5352004311717,48h,59.1635882567789
+Liang 2018,Breast,MDA-MB-231,Imperatorin,125.633794018605,48h,49.5694937831905
+Liang 2018,Breast,MDA-MB-231,Imperatorin,250.704194880948,48h,39.1143898085606
+Liang 2018,Breast,MDA-MB-231,Imperatorin,500.281710905631,48h,26.5682641005799
+Liang 2018,Breast,MDA-MB-231,Imperatorin,32.1126577131008,72h,66.5436616506353
+Liang 2018,Breast,MDA-MB-231,Imperatorin,63.0985720961817,72h,59.2865922952844
+Liang 2018,Breast,MDA-MB-231,Imperatorin,125.633794018605,72h,37.0233680752098
+Liang 2018,Breast,MDA-MB-231,Imperatorin,250.704194880948,72h,27.7982763328893
+Liang 2018,Breast,MDA-MB-231,Imperatorin,500.281710905631,72h,22.7552257112083
+Pu Wu 2023, Epidermal cancer,KB-3-1,Imperatorin,0.648437479045241,72h,100
+Pu Wu 2023, Epidermal cancer,KB-3-2,Imperatorin,2.7571428610354,72h,101.515153996397
+Pu Wu 2023, Epidermal cancer,KB-3-3,Imperatorin,5.43571404632259,72h,99.4949443865015
+Pu Wu 2023, Epidermal cancer,KB-3-4,Imperatorin,8.15714171662632,72h,98.4848492146267
+Pu Wu 2023, Epidermal cancer,KB-3-5,Imperatorin,18.5714301284481,72h,92.0875444714844
+Pu Wu 2023, Epidermal cancer,KB-3-6,Imperatorin,45.7857142467887,72h,84.8484889352432
+Pu Wu 2023, Epidermal cancer,KB-3-7,Imperatorin,72.5714497468948,72h,69.8653222492622
+Pu Wu 2023, Epidermal cancer,KB-3-8,Imperatorin,100,72h,42.7609492802954
+Pu Wu 2023, Epidermal cancer,KB-3-9,Imperatorin,127.214316815751,72h,16.3299730925784
+Pu Wu 2023,Ovarian cancer,OVCAR-8,Imperatorin,0.640625097788876,72h,94.9409778497631
+Pu Wu 2023,Ovarian cancer,OVCAR-8,Imperatorin,2.7571428610354,72h,94.2857151100185
+Pu Wu 2023,Ovarian cancer,OVCAR-8,Imperatorin,5.43571404632259,72h,93.6134404538758
+Pu Wu 2023,Ovarian cancer,OVCAR-8,Imperatorin,8.17857159400471,72h,94.2857151100185
+Pu Wu 2023,Ovarian cancer,OVCAR-8,Imperatorin,1.87857126119182,72h,88.5714270144093
+Pu Wu 2023,Ovarian cancer,OVCAR-8,Imperatorin,4.57857142467887,72h,84.2016818198298
+Pu Wu 2023,Ovarian cancer,OVCAR-8,Imperatorin,7.25714497468948,72h,76.4705921951873
+Pu Wu 2023,Ovarian cancer,OVCAR-8,Imperatorin,9.97857338652354,72h,63.5294148571939
+Pu Wu 2023,Ovarian cancer,OVCAR-8,Imperatorin,12.7000017983576,72h,25.5462253619851
+Lv 2021,Osteosarcoma,143B,Imperatorin,0,24h,100
+Lv 2021,Osteosarcoma,143B,Imperatorin,10,24h,89.0331871367582
+Lv 2021,Osteosarcoma,143B,Imperatorin,50,24h,88.7445885003364
+Lv 2021,Osteosarcoma,143B,Imperatorin,100,24h,69.2640690734332
+Lv 2021,Osteosarcoma,143B,Imperatorin,200,24h,43.4343411129533
+Lv 2021,Osteosarcoma,143B,Imperatorin,0,48h,100
+Lv 2021,Osteosarcoma,143B,Imperatorin,10,48h,77.2005769880975
+Lv 2021,Osteosarcoma,143B,Imperatorin,50,48h,61.327561158769
+Lv 2021,Osteosarcoma,143B,Imperatorin,100,48h,53.2467497974336
+Lv 2021,Osteosarcoma,143B,Imperatorin,200,48h,43.4343411129533
+Lv 2021,Osteosarcoma,U2OS,Imperatorin,0,24h,100
+Lv 2021,Osteosarcoma,U2OS,Imperatorin,10,24h,90.9985938735853
+Lv 2021,Osteosarcoma,U2OS,Imperatorin,50,24h,62.1659604737263
+Lv 2021,Osteosarcoma,U2OS,Imperatorin,100,24h,47.3980276673399
+Lv 2021,Osteosarcoma,U2OS,Imperatorin,200,24h,29.2545705815047
+Lv 2021,Osteosarcoma,U2OS,Imperatorin,0,48h,100
+Lv 2021,Osteosarcoma,U2OS,Imperatorin,10,48h,86.2165944377956
+Lv 2021,Osteosarcoma,U2OS,Imperatorin,50,48h,62.0253156407205
+Lv 2021,Osteosarcoma,U2OS,Imperatorin,100,48h,36.0056245056586
+Lv 2021,Osteosarcoma,U2OS,Imperatorin,200,48h,24.6132213439774

@@ -94,25 +94,52 @@ fCsp3s = {"auraptene": 0.32,
           "imperatorin": 0.19,
           "herniarin": 0.10}
 
-
 # Read the data
-data = pd.read_csv("Data/Data.csv")
+data1 = pd.read_csv("Data/Data.csv")
+data2 = pd.read_csv("Data/new_data.csv")
 
-# Remove null columns
-data = data.dropna(axis=1)
+# Fix time in data2
+data2["Time"] = data2["Time"].str.replace("h", "", regex=False).astype(float)
+
+# Remove the null columns and rows from the datasets
+data2 = data2 [["Author", "Cancer", "CellLine", "Coumarin", "Dose", "Time", "Viability"]]
+data2 = data2.dropna(axis=0)
+data1 = data1.dropna(axis=1)
+
+# Concatenate the datasets:
+data = pd.concat(objs=[data1, data2])
+
+# Print the sizes of the datasets:
+print()
+print("Size of the first dataset: ", data1.__len__())
+print("Size of the second dataset: ", data2.__len__())
+print("Size of the combined dataset: ", data.__len__())
+
+line = "=" * 100 + "\n"
+print(line)
+
+# Coumarins in each dataset:
+print('Data1 coumarins:')
+print(data1["Coumarin"].value_counts())
+print()
+print('Data2 coumarins:')
+print(data2["Coumarin"].value_counts())
+print(line)
+
 
 # Remove whitspace from the categorical values and make them lowercase
 data["Coumarin"] = data["Coumarin"].str.replace(r'\s+', '', regex=True)
 data["Coumarin"] = data["Coumarin"].str.lower()
 
-data["Coumarin"] = data["Coumarin"].str.replace(r'\s+', '', regex=True)
-data["Coumarin"] = data["Coumarin"].str.lower()
+data["Cancer"] = data["Cancer"].str.replace(r'\s+', '', regex=True)
+data["Cancer"] = data["Cancer"].str.lower()
 
-data["Coumarin"] = data["Coumarin"].str.replace(r'\s+', '', regex=True)
-data["Coumarin"] = data["Coumarin"].str.lower()
+data["CellLine"] = data["CellLine"].str.replace(r'\s+', '', regex=True)
+data["CellLine"] = data["CellLine"].str.lower()
 
 # Remove whitespace from the feature names as well
 data.columns = data.columns.str.replace(r'\s+', '', regex=True)
+
 
 # Add the new features
 data["MW"] = data["Coumarin"].map(MWs)
@@ -126,10 +153,16 @@ data["fCsp3"] = data["Coumarin"].map(fCsp3s)
 
 # Take a look at the new data structure and columns
 print("Head of the data after new features:")
-print(tabulate(data.head(), headers='keys', tablefmt='rounded_grid'))
+print(data.head())
+print(line)
 
 # Check out the correlation matrix of the new features (Ring counts excluded due to low variation)
 cols = ["MW", "LogP", "NumHDonors", "NumHAcceptors", "RotatableBonds", "TPSA","RingCounts", "fCsp3"]
+
+# Print all of our features:
+print()
+print("Features of our data:")
+print(data.columns.to_list())
 
 corr_matrix = data[cols].corr()
 print("\nCorrelation Matrix of the newly engineered features:")
@@ -140,18 +173,43 @@ plt.figure(figsize=(10, 8))
 
 sns.heatmap(corr_matrix, 
             annot=True,                # Show values
-            cmap='RdBu_r',             # Color scheme
+            cmap='Spectral',             # Color scheme
             center=0,                  # Center colormap at 0
             fmt='.2f',                 # 2 decimal places
             square=True,               # Square cells
             linewidths=0.5,            # Grid lines
             cbar_kws={"shrink": 0.8})  # Colorbar size
 
-plt.title('Engineered Features Correlation Matrix Heatmap', fontsize=14)
+plt.title('Structural Features Correlation Matrix', fontsize=20)
 plt.tight_layout()
-
-# Given the results of the Correlation matrix I have decided that adding cross features could be
-# of negative effect to the overall generalization process.
+plt.savefig("Figures/Correlation_Matrix.png")
+# plt.show()
 
 # Save the data
-data.to_csv("Data/Engineered_Data.csv",index=False)
+data.to_csv("Data/Processed_Data.csv",index=False)
+
+# Make data for classification models as well
+# Class 1 is when viability is between 40 and 60, class zero is otherwise
+classification_data = data.copy()
+
+classification_data["Viability"] = (
+    (classification_data["Viability"] > 40) &
+    (classification_data["Viability"] < 60)
+).astype(int)
+
+print()
+print(line)
+print("Classification target distribution:")
+print(classification_data["Viability"].value_counts().sort_index())
+
+print()
+print("Classification target proportions:")
+print(classification_data["Viability"].value_counts(normalize=True).sort_index())
+
+classification_data.to_csv(
+    "Data/Classification_Data.csv",
+    index=False
+)
+
+print()
+print("Classification data saved to: Data/Classification_Data.csv")
