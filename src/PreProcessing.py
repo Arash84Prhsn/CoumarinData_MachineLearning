@@ -173,16 +173,16 @@ plt.figure(figsize=(10, 8))
 
 sns.heatmap(corr_matrix, 
             annot=True,                # Show values
-            cmap='Spectral',             # Color scheme
+            cmap='Spectral',           # Color scheme
             center=0,                  # Center colormap at 0
             fmt='.2f',                 # 2 decimal places
             square=True,               # Square cells
             linewidths=0.5,            # Grid lines
             cbar_kws={"shrink": 0.8})  # Colorbar size
 
-plt.title('Structural Features Correlation Matrix', fontsize=20)
+plt.title('Structural Features Correlation Matrix', fontsize=18)
 plt.tight_layout()
-plt.savefig("Figures/Correlation_Matrix.png")
+plt.savefig("Figures/Fig1_Correlation_Matrix.png")
 # plt.show()
 
 # Save the data
