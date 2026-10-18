@@ -24,7 +24,7 @@ os.makedirs(PARAMETERS_DIR, exist_ok=True)
 
 # Training constants
 RANDOM_STATE = 42
-N_ITER = 30 # For the randomsearch to find the best parameters
+N_ITER = 200 # For the randomsearch to find the best parameters
 N_SPLITS = 5 # For KFold
 
 # Other constants
@@ -119,14 +119,14 @@ categorical_features = [
 numerical_features = [
     "Dose",
     "Time",
-    "MW",
+    # "MW",
     "LogP",
     "NumHDonors",
     "NumHAcceptors",
     "RotatableBonds",
     "TPSA",
     "RingCounts",
-    "fCsp3"
+    # "fCsp3"
 ]
 
 feature_columns = categorical_features + numerical_features
@@ -346,11 +346,11 @@ def train_and_test_model(model_name, search_grid, train_data, test_data):
 # End of function =================================================================================>
 
 models = {
-    "XGBoost": xgboost_searchGrid,
+    "DecisionTree": decisionTree_searchGrid,
     "ExtraTrees": extraTrees_searchGrid,
+    "XGBoost": xgboost_searchGrid,
     "GradientBoosting": gradientBoosting_searchGrid,
     "RandomForest": randomForest_searchGrid,
-    "DecisionTree": decisionTree_searchGrid
 }
 
 results = {}
