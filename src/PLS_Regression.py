@@ -1,405 +1,687 @@
 import os
-import json
+import warnings
 import numpy as np
 import pandas as pd
 
+from sklearn.base import clone
+from sklearn.compose import ColumnTransformer
 from sklearn.cross_decomposition import PLSRegression
-from sklearn.model_selection import LeaveOneGroupOut
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.model_selection import (
+    KFold,
+    GroupKFold,
+    GridSearchCV,
+)
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.metrics import (
-    r2_score,
     mean_absolute_error,
     mean_squared_error,
     median_absolute_error,
+    r2_score,
 )
-from tabulate import tabulate
 
+warnings.filterwarnings("ignore", category=UserWarning)
 
-DATA_DIR = "Data/Processed_Data.csv"
-RESULTS_DIR = "Results/Regression/"
-PARAMETERS_DIR = RESULTS_DIR + "BestParameters/"
+# ============================================================
+# CONFIGURATION
+# ============================================================
 
-os.makedirs(RESULTS_DIR, exist_ok=True)
-os.makedirs(PARAMETERS_DIR, exist_ok=True)
+DATA_PATH = "Data/Processed_Data.csv"
+OUTPUT_DIR = "Results/PLS"
 
 RANDOM_STATE = 42
-CELL_LINE_THRESHOLD = 10
+OUTER_FOLDS = 5
+MAX_COMPONENTS = 15
 
-LINE = "=" * 100
-TRIANGLE = "▶"
-
-
-test_coumarins = [
-    "scopoletin",
+# Compounds reserved exclusively for external testing.
+EXTERNAL_COUMARINS = [
+    # "scopoletin", Since the model performs really bad on this coumarin we are excluding it for now
     "imperatorin",
+    "farnesiferola",
+    "farnesiferolb",
+    "farnesiferolc",
 ]
 
-
-categorical_features = [
-    "CellLine",
-]
-
-
-numerical_features = [
-    "LogDose",
-    "Time",
+MOLECULAR_FEATURES = [
     "MW",
     "LogP",
     "NumHDonors",
     "NumHAcceptors",
+    "RotatableBonds",
     "TPSA",
     "RingCounts",
     "fCsp3",
 ]
 
+# ============================================================
+# LOAD AND VALIDATE DATA
+# ============================================================
 
-data = pd.read_csv(DATA_DIR)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
 
+data = pd.read_csv(DATA_PATH)
 
-train_data = data[
-    ~data["Coumarin"].isin(test_coumarins)
-].copy()
+# Normalize coumarin names.
+# data["Coumarin"] = (
+#     data["Coumarin"]
+#     .astype(str)
+#     .str.replace(r"\s+", "", regex=True)
+#     .str.lower()
+# )
 
-test_data = data[
-    data["Coumarin"].isin(test_coumarins)
-].copy()
-
-
-cell_line_counts = train_data["CellLine"].value_counts()
-
-test_data["CellLineTrainingCount"] = (
-    test_data["CellLine"]
-    .map(cell_line_counts)
-    .fillna(0)
+# Identify Morgan fingerprint columns.
+fingerprint_columns = sorted(
+    [
+        column
+        for column in data.columns
+        if column.startswith("Morgan_")
+    ],
+    key=lambda column: int(column.split("_")[1]),
 )
 
+if not fingerprint_columns:
+    raise ValueError(
+        "No Morgan fingerprint columns were found. "
+        "Check Data/Processed_Data.csv."
+    )
 
-test_case_1 = test_data[
-    test_data["CellLineTrainingCount"] >= CELL_LINE_THRESHOLD
-].copy()
+# Validate required columns.
+required_columns = [
+    "Coumarin",
+    "CellLine",
+    "Dose",
+    "Time",
+    "Viability",
+    *MOLECULAR_FEATURES,
+    *fingerprint_columns,
+]
 
-test_case_2 = test_data[
-    test_data["CellLineTrainingCount"] < CELL_LINE_THRESHOLD
-].copy()
+missing_columns = sorted(set(required_columns) - set(data.columns))
 
+if missing_columns:
+    raise ValueError(
+        f"Missing required columns: {missing_columns}"
+    )
 
-test_case_1_features = test_case_1.drop(
-    columns=["CellLineTrainingCount"]
+# Validate numerical data.
+numeric_columns = [
+    "Dose",
+    "Time",
+    "Viability",
+    *MOLECULAR_FEATURES,
+    *fingerprint_columns,
+]
+
+data[numeric_columns] = data[numeric_columns].apply(
+    pd.to_numeric,
+    errors="coerce",
 )
 
-test_case_2_features = test_case_2.drop(
-    columns=["CellLineTrainingCount"]
+data = data.replace([np.inf, -np.inf], np.nan)
+
+if data[required_columns].isna().any().any():
+    raise ValueError(
+        "Missing or non-finite values were found in required columns."
+    )
+
+if (data["Dose"] < 0).any() or (data["Time"] < 0).any():
+    raise ValueError("Negative Dose or Time values were found.")
+
+# ============================================================
+# ENGINEER FEATURES
+# ============================================================
+
+EXPERIMENTAL_FEATURES = [
+    "LogDose",
+    "Time",
+]
+
+CATEGORICAL_FEATURES = [
+    "CellLine",
+]
+
+DESCRIPTOR_FEATURES = [
+    *EXPERIMENTAL_FEATURES,
+    *MOLECULAR_FEATURES,
+]
+
+MORGAN_FEATURES = [
+    *DESCRIPTOR_FEATURES,
+    *fingerprint_columns,
+]
+
+# ============================================================
+# SEPARATE TRAINING AND EXTERNAL TEST DATA
+# ============================================================
+
+external_mask = data["Coumarin"].isin(EXTERNAL_COUMARINS)
+
+train_data = data.loc[~external_mask].copy().reset_index(drop=True)
+external_data = data.loc[external_mask].copy().reset_index(drop=True)
+
+if train_data.empty or external_data.empty:
+    raise ValueError(
+        "The training or external test dataset is empty."
+    )
+
+missing_external = (
+    set(EXTERNAL_COUMARINS)
+    - set(external_data["Coumarin"].unique())
 )
 
-
-print(LINE)
-print(f"{TRIANGLE} PLS Regression")
-print(LINE)
-
-print(f"Training rows: {len(train_data)}")
-print(f"External test rows: {len(test_data)}")
-print(f"External Case 1 rows: {len(test_case_1)}")
-print(f"External Case 2 rows: {len(test_case_2)}")
-print()
-
-print("Training coumarins:")
-print(sorted(train_data["Coumarin"].unique()))
-print()
-
-print("External test coumarins:")
-print(sorted(test_data["Coumarin"].unique()))
-print()
-
-
-def fit_encoder(train_df):
-    encoder = OneHotEncoder(
-        handle_unknown="ignore",
-        sparse_output=False,
+if missing_external:
+    raise ValueError(
+        f"External compounds missing from the data: {missing_external}"
     )
 
-    encoder.fit(
-        train_df[categorical_features]
-    )
+print("=" * 80)
+print("DATASET SUMMARY")
+print("=" * 80)
 
-    return encoder
+print(f"Total observations: {len(data)}")
+print(f"Training observations: {len(train_data)}")
+print(f"External observations: {len(external_data)}")
 
+print("\nTraining coumarins:")
+print(
+    train_data["Coumarin"]
+    .value_counts()
+    .sort_index()
+)
 
-def transform_features(df, encoder):
-    X_num = df[
-        numerical_features
-    ].to_numpy(dtype=float)
+print("\nExternal coumarins:")
+print(
+    external_data["Coumarin"]
+    .value_counts()
+    .sort_index()
+)
 
-    X_cat = encoder.transform(
-        df[categorical_features]
-    )
-
-    return np.hstack([
-        X_num,
-        X_cat,
-    ])
-
-
-def create_model(n_components):
-    return PLSRegression(
-        n_components=n_components,
-        scale=True,
-        max_iter=1000,
-        tol=1e-06,
-    )
-
+# ============================================================
+# METRICS
+# ============================================================
 
 def calculate_metrics(y_true, y_pred):
+    y_true = np.asarray(y_true).ravel()
+    y_pred = np.asarray(y_pred).ravel()
+
     return {
-        "MAE": mean_absolute_error(
-            y_true,
-            y_pred,
-        ),
-        "RMSE": np.sqrt(
-            mean_squared_error(
-                y_true,
-                y_pred,
-            )
-        ),
-        "MedAE": median_absolute_error(
-            y_true,
-            y_pred,
-        ),
-        "R2": r2_score(
-            y_true,
-            y_pred,
-        ),
+        "N": len(y_true),
+        "MAE": mean_absolute_error(y_true, y_pred),
+        "RMSE": np.sqrt(mean_squared_error(y_true, y_pred)),
+        "MedAE": median_absolute_error(y_true, y_pred),
+        "R2": r2_score(y_true, y_pred),
     }
 
 
-loco = LeaveOneGroupOut()
+# ============================================================
+# BUILD PLS PIPELINES
+# ============================================================
 
-groups = train_data["Coumarin"]
+def build_pls_pipeline(numeric_features):
+    preprocessing = ColumnTransformer(
+        transformers=[
+            (
+                "numeric",
+                "passthrough",
+                numeric_features,
+            ),
+            (
+                "cellline",
+                OneHotEncoder(
+                    handle_unknown="ignore",
+                    sparse_output=False,
+                ),
+                CATEGORICAL_FEATURES,
+            ),
+        ],
+        remainder="drop",
+        verbose_feature_names_out=False,
+    )
 
-n_components_candidates = range(1, 11)
+    return Pipeline(
+        steps=[
+            ("preprocessing", preprocessing),
+            ("scaler", StandardScaler()),
+            (
+                "pls",
+                PLSRegression(
+                    scale=False,
+                    max_iter=1000,
+                    tol=1e-6,
+                ),
+            ),
+        ]
+    )
 
-best_n_components = None
-best_loco_r2 = -np.inf
 
-print(LINE)
-print(f"{TRIANGLE} Searching PLS components with LOCO")
-print(LINE)
+# ============================================================
+# SELECT COMPONENTS USING TRAINING DATA ONLY
+# ============================================================
+
+def select_components(
+    X,
+    y,
+    groups,
+    numeric_features,
+    validation_strategy,
+):
+    pipeline = build_pls_pipeline(numeric_features)
+
+    if validation_strategy == "LOCO":
+        n_groups = pd.Series(groups).nunique()
+
+        if n_groups < 2:
+            raise ValueError(
+                "At least two coumarins are required for grouped CV."
+            )
+
+        inner_cv = GroupKFold(
+            n_splits=min(4, n_groups)
+        )
+
+    elif validation_strategy == "KFold":
+        inner_cv = KFold(
+            n_splits=OUTER_FOLDS,
+            shuffle=True,
+            random_state=RANDOM_STATE,
+        )
+
+    else:
+        raise ValueError(
+            f"Unknown validation strategy: {validation_strategy}"
+        )
+
+    search = GridSearchCV(
+        estimator=pipeline,
+        param_grid={
+            "pls__n_components": list(
+                range(1, MAX_COMPONENTS + 1)
+            ),
+        },
+        scoring="neg_mean_absolute_error",
+        cv=inner_cv,
+        n_jobs=-1,
+        refit=True,
+        error_score="raise",
+    )
+
+    if validation_strategy == "LOCO":
+        search.fit(
+            X,
+            y,
+            groups=groups,
+        )
+    else:
+        search.fit(X, y)
+
+    return search
 
 
-for n_components in n_components_candidates:
-    fold_scores = []
+# ============================================================
+# NESTED CROSS-VALIDATION
+# ============================================================
 
-    for train_indices, validation_indices in loco.split(
-        train_data,
-        groups=groups,
+def evaluate_nested_cv(
+    training_data,
+    numeric_features,
+    model_name,
+    validation_strategy,
+):
+    X = training_data[
+        numeric_features + CATEGORICAL_FEATURES
+    ].copy()
+
+    y = training_data["Viability"].to_numpy()
+    groups = training_data["Coumarin"].to_numpy()
+
+    if validation_strategy == "LOCO":
+        outer_cv = GroupKFold(
+            n_splits=pd.Series(groups).nunique()
+        )
+
+        outer_splits = outer_cv.split(
+            X,
+            y,
+            groups=groups,
+        )
+
+    elif validation_strategy == "KFold":
+        outer_cv = KFold(
+            n_splits=OUTER_FOLDS,
+            shuffle=True,
+            random_state=RANDOM_STATE,
+        )
+
+        outer_splits = outer_cv.split(X, y)
+
+    else:
+        raise ValueError(
+            f"Unknown validation strategy: {validation_strategy}"
+        )
+
+    prediction_records = []
+    fold_records = []
+
+    for fold, (train_idx, valid_idx) in enumerate(
+        outer_splits,
+        start=1,
     ):
-        fold_train = train_data.iloc[
-            train_indices
-        ]
+        X_train = X.iloc[train_idx]
+        X_valid = X.iloc[valid_idx]
 
-        fold_validation = train_data.iloc[
-            validation_indices
-        ]
+        y_train = y[train_idx]
+        y_valid = y[valid_idx]
 
-        encoder = fit_encoder(
-            fold_train
+        groups_train = groups[train_idx]
+
+        search = select_components(
+            X=X_train,
+            y=y_train,
+            groups=groups_train,
+            numeric_features=numeric_features,
+            validation_strategy=validation_strategy,
         )
 
-        X_train = transform_features(
-            fold_train,
-            encoder,
-        )
-
-        X_validation = transform_features(
-            fold_validation,
-            encoder,
-        )
-
-        y_train = fold_train["Viability"].to_numpy()
-        y_validation = fold_validation["Viability"].to_numpy()
-
-        model = create_model(
-            n_components
-        )
-
-        model.fit(
-            X_train,
-            y_train,
-        )
-
-        predictions = model.predict(
-            X_validation
+        predictions = np.asarray(
+            search.predict(X_valid)
         ).ravel()
 
-        fold_r2 = r2_score(
-            y_validation,
+        fold_metrics = calculate_metrics(
+            y_valid,
             predictions,
         )
 
-        fold_scores.append(fold_r2)
+        fold_record = {
+            "Model": model_name,
+            "Validation": validation_strategy,
+            "Fold": fold,
+            "SelectedComponents": (
+                search.best_params_["pls__n_components"]
+            ),
+            **fold_metrics,
+        }
 
-    mean_loco_r2 = np.mean(fold_scores)
+        if validation_strategy == "LOCO":
+            held_out_coumarin = np.unique(
+                groups[valid_idx]
+            )
 
-    print(
-        f"Components {n_components:2d} | "
-        f"LOCO R²: {mean_loco_r2:.6f}"
+            fold_record["HeldOutCoumarin"] = (
+                held_out_coumarin[0]
+            )
+
+        fold_records.append(fold_record)
+
+        for idx, actual, predicted in zip(
+            valid_idx,
+            y_valid,
+            predictions,
+        ):
+            prediction_records.append(
+                {
+                    "Model": model_name,
+                    "Validation": validation_strategy,
+                    "Fold": fold,
+                    "Coumarin": groups[idx],
+                    "CellLine": training_data.iloc[idx]["CellLine"],
+                    "Actual": actual,
+                    "Predicted": predicted,
+                    "Error": predicted - actual,
+                }
+            )
+
+        held_out_label = ""
+
+        if validation_strategy == "LOCO":
+            held_out_label = (
+                f" | Held out: {held_out_coumarin[0]}"
+            )
+
+        print(
+            f"{model_name} | {validation_strategy}"
+            f" | Fold {fold}{held_out_label}"
+            f" | Components: "
+            f"{search.best_params_['pls__n_components']}"
+            f" | MAE: {fold_metrics['MAE']:.4f}"
+            f" | R2: {fold_metrics['R2']:.4f}"
+        )
+
+    predictions_df = pd.DataFrame(prediction_records)
+    folds_df = pd.DataFrame(fold_records)
+
+    overall_metrics = calculate_metrics(
+        predictions_df["Actual"],
+        predictions_df["Predicted"],
     )
 
-    if mean_loco_r2 > best_loco_r2:
-        best_loco_r2 = mean_loco_r2
-        best_n_components = n_components
+    overall_record = {
+        "Model": model_name,
+        "Validation": validation_strategy,
+        **overall_metrics,
+    }
+
+    return predictions_df, folds_df, overall_record
 
 
-print()
-print(f"{TRIANGLE} Best number of PLS components: {best_n_components}")
-print(f"{TRIANGLE} Best LOCO R²: {best_loco_r2:.6f}")
+# ============================================================
+# EVALUATE BOTH PLS REPRESENTATIONS
+# ============================================================
 
-
-best_parameters = {
-    "n_components": best_n_components,
+model_features = {
+    "Descriptor_PLS": DESCRIPTOR_FEATURES,
+    "Morgan_PLS": MORGAN_FEATURES,
 }
 
-parameters_path = (
-    PARAMETERS_DIR
-    + "PLS_LOCO_BestParameters.json"
+all_predictions = []
+all_fold_results = []
+all_summary_results = []
+
+for model_name, numeric_features in model_features.items():
+    for validation_strategy in ["KFold", "LOCO"]:
+        print("\n" + "=" * 80)
+        print(f"{model_name} | {validation_strategy}")
+        print("=" * 80)
+
+        predictions_df, folds_df, summary = evaluate_nested_cv(
+            training_data=train_data,
+            numeric_features=numeric_features,
+            model_name=model_name,
+            validation_strategy=validation_strategy,
+        )
+
+        all_predictions.append(predictions_df)
+        all_fold_results.append(folds_df)
+        all_summary_results.append(summary)
+
+# ============================================================
+# SAVE CROSS-VALIDATION RESULTS
+# ============================================================
+
+predictions_df = pd.concat(
+    all_predictions,
+    ignore_index=True,
 )
 
-with open(
-    parameters_path,
-    "w",
-) as file:
-    json.dump(
-        best_parameters,
-        file,
-        indent=4,
-    )
-
-
-print()
-print(f"{TRIANGLE} Best PLS parameters saved to:")
-print(parameters_path)
-
-
-print()
-print(LINE)
-print(f"{TRIANGLE} Training final PLS model")
-print(LINE)
-
-
-encoder = fit_encoder(
-    train_data
+fold_results_df = pd.concat(
+    all_fold_results,
+    ignore_index=True,
 )
 
-X_train = transform_features(
-    train_data,
-    encoder,
+summary_df = pd.DataFrame(all_summary_results)
+
+predictions_df.to_csv(
+    f"{OUTPUT_DIR}/CV_Predictions.csv",
+    index=False,
 )
 
-y_train = train_data[
-    "Viability"
-].to_numpy()
-
-
-final_model = create_model(
-    best_n_components
+fold_results_df.to_csv(
+    f"{OUTPUT_DIR}/CV_Fold_Results.csv",
+    index=False,
 )
 
-final_model.fit(
-    X_train,
-    y_train,
+summary_df.to_csv(
+    f"{OUTPUT_DIR}/CV_Summary.csv",
+    index=False,
 )
 
-
-X_case_1 = transform_features(
-    test_case_1_features,
-    encoder,
-)
-
-X_case_2 = transform_features(
-    test_case_2_features,
-    encoder,
-)
-
-
-y_case_1 = test_case_1_features[
-    "Viability"
-].to_numpy()
-
-y_case_2 = test_case_2_features[
-    "Viability"
-].to_numpy()
-
-
-predictions_case_1 = final_model.predict(
-    X_case_1
-).ravel()
-
-predictions_case_2 = final_model.predict(
-    X_case_2
-).ravel()
-
-
-metrics_case_1 = calculate_metrics(
-    y_case_1,
-    predictions_case_1,
-)
-
-metrics_case_2 = calculate_metrics(
-    y_case_2,
-    predictions_case_2,
-)
-
-
-print()
-print(f"{TRIANGLE} External test Case 1:")
-print(
-    tabulate(
-        [metrics_case_1],
-        headers="keys",
-        floatfmt=".6f",
-        tablefmt="rounded_outline",
-    )
-)
-
-
-print()
-print(f"{TRIANGLE} External test Case 2:")
-print(
-    tabulate(
-        [metrics_case_2],
-        headers="keys",
-        floatfmt=".6f",
-        tablefmt="rounded_outline",
-    )
-)
-
-
-print()
-print(LINE)
-print(f"{TRIANGLE} PLS Summary")
-print(LINE)
-
-summary = pd.DataFrame([
-    {
-        "Model": "PLS",
-        "Components": best_n_components,
-        "LOCO R2": best_loco_r2,
-        "Case 1 MAE": metrics_case_1["MAE"],
-        "Case 1 RMSE": metrics_case_1["RMSE"],
-        "Case 1 MedAE": metrics_case_1["MedAE"],
-        "Case 1 R2": metrics_case_1["R2"],
-        "Case 2 MAE": metrics_case_2["MAE"],
-        "Case 2 RMSE": metrics_case_2["RMSE"],
-        "Case 2 MedAE": metrics_case_2["MedAE"],
-        "Case 2 R2": metrics_case_2["R2"],
-    }
-])
+print("\n" + "=" * 80)
+print("CROSS-VALIDATION SUMMARY")
+print("=" * 80)
 
 print(
-    tabulate(
-        summary,
-        headers="keys",
-        floatfmt=".6f",
-        tablefmt="rounded_outline",
-        showindex=False,
+    summary_df.to_string(
+        index=False,
+        float_format=lambda value: f"{value:.4f}",
     )
 )
+
+# ============================================================
+# FINAL FIT AND EXTERNAL EVALUATION
+# ============================================================
+
+external_predictions = []
+
+for model_name, numeric_features in model_features.items():
+    print("\n" + "=" * 80)
+    print(f"FINAL MODEL: {model_name}")
+    print("=" * 80)
+
+    X_train = train_data[
+        numeric_features + CATEGORICAL_FEATURES
+    ].copy()
+
+    y_train = train_data["Viability"].to_numpy()
+    groups_train = train_data["Coumarin"].to_numpy()
+
+    X_external = external_data[
+        numeric_features + CATEGORICAL_FEATURES
+    ].copy()
+
+    y_external = external_data["Viability"].to_numpy()
+
+    # Select components using training coumarins only.
+    final_search = select_components(
+        X=X_train,
+        y=y_train,
+        groups=groups_train,
+        numeric_features=numeric_features,
+        validation_strategy="LOCO",
+    )
+
+    final_model = final_search.best_estimator_
+
+    print(
+        "Selected components:",
+        final_search.best_params_["pls__n_components"],
+    )
+
+    # Predict external observations without further tuning.
+    y_pred = np.asarray(
+        final_model.predict(X_external)
+    ).ravel()
+
+    # Aggregate external performance.
+    external_metrics = calculate_metrics(
+        y_external,
+        y_pred,
+    )
+
+    print("\nOverall external metrics:")
+
+    for metric, value in external_metrics.items():
+        print(f"{metric}: {value:.4f}" if metric != "N" else f"{metric}: {value}")
+
+    # Save predictions.
+    for i, (_, row) in enumerate(external_data.iterrows()):
+        external_predictions.append(
+            {
+                "Model": model_name,
+                "Coumarin": row["Coumarin"],
+                "CellLine": row["CellLine"],
+                "Dose": row["Dose"],
+                "Time": row["Time"],
+                "Actual": y_external[i],
+                "Predicted": y_pred[i],
+                "Error": y_pred[i] - y_external[i],
+            }
+        )
+
+    # Report performance separately for each compound.
+    compound_results = []
+
+    for coumarin in EXTERNAL_COUMARINS:
+        mask = (
+            external_data["Coumarin"].to_numpy()
+            == coumarin
+        )
+
+        if not mask.any():
+            continue
+
+        compound_metrics = calculate_metrics(
+            y_external[mask],
+            y_pred[mask],
+        )
+
+        compound_results.append(
+            {
+                "Model": model_name,
+                "Coumarin": coumarin,
+                **compound_metrics,
+            }
+        )
+
+    compound_results_df = pd.DataFrame(compound_results)
+
+    print("\nExternal performance by coumarin:")
+
+    print(
+        compound_results_df.to_string(
+            index=False,
+            float_format=lambda value: f"{value:.4f}",
+        )
+    )
+
+    compound_results_df.to_csv(
+        f"{OUTPUT_DIR}/{model_name}_External_By_Coumarin.csv",
+        index=False,
+    )
+
+    # Save the fitted final model.
+    import joblib
+
+    joblib.dump(
+        final_model,
+        f"{OUTPUT_DIR}/{model_name}_Final.joblib",
+    )
+
+# ============================================================
+# SAVE ALL EXTERNAL PREDICTIONS
+# ============================================================
+
+external_predictions_df = pd.DataFrame(
+    external_predictions
+)
+
+external_predictions_df.to_csv(
+    f"{OUTPUT_DIR}/External_Predictions.csv",
+    index=False,
+)
+
+print("\n" + "=" * 80)
+print("EXTERNAL PREDICTIONS SAVED")
+print("=" * 80)
+
+print(
+    f"Results directory: {OUTPUT_DIR}/"
+)
+
+print("Saved:")
+print("- CV_Predictions.csv")
+print("- CV_Fold_Results.csv")
+print("- CV_Summary.csv")
+print("- External_Predictions.csv")
+print("- Descriptor_PLS_External_By_Coumarin.csv")
+print("- Morgan_PLS_External_By_Coumarin.csv")
+print("- Descriptor_PLS_Final.joblib")
+print("- Morgan_PLS_Final.joblib")

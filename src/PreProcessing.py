@@ -9,18 +9,18 @@ from rdkit.Chem import rdFingerprintGenerator
 
 # Compound smiles from PubChem:
 SMILES = {
-    "auraptene": "CC(=CCC/C(=C/COC1=CC2=C(C=C1)C=CC(=O)O2)/C)C",
-    "osthole": "CC(=CCC1=C(C=CC2=C1OC(=O)C=C2)OC)C",
-    "esculetin": "C1=CC(=O)OC2=CC(=C(C=C21)O)O",
-    "galbanicacid": "C[C@H]1CCC(=C(C)C)[C@@H]([C@@]1(C)COC2=CC3=C(C=C2)C=CC(=O)O3)CCC(=O)O",
-    "umbelliprenin": "CC(=CCC/C(=C/CC/C(=C/COC1=CC2=C(C=C1)C=CC(=O)O2)/C)/C)C",
-    "umbelliferone": "C1=CC(=CC2=C1C=CC(=O)O2)O",
-    "scopoletin": "COC1=C(C=C2C(=C1)C=CC(=O)O2)O",
-    "imperatorin": "CC(=CCOC1=C2C(=CC3=C1OC=C3)C=CC(=O)O2)C",
-    "herniarin": "COC1=CC2=C(C=C1)C=CC(=O)O2",
-    "farnesiferola": "C[C@@]12CC[C@H](C([C@H]1CCC(=C)[C@@H]2COC3=CC4=C(C=C3)C=CC(=O)O4)(C)C)O",
-    "farnesiferolb": "C/C(=C\COC1=CC2=C(C=C1)C=CC(=O)O2)/CC[C@@H]3C(=C)CC[C@@H](C3(C)C)O",
-    "farnesiferolc": "C/C(=C\COC1=CC2=C(C=C1)C=CC(=O)O2)/CC[C@H]3[C@@]4(CC[C@H](C3(C)C)O4)C",
+    "auraptene": r"CC(=CCC/C(=C/COC1=CC2=C(C=C1)C=CC(=O)O2)/C)C",
+    "osthole": r"CC(=CCC1=C(C=CC2=C1OC(=O)C=C2)OC)C",
+    "esculetin": r"C1=CC(=O)OC2=CC(=C(C=C21)O)O",
+    "galbanicacid": r"C[C@H]1CCC(=C(C)C)[C@@H]([C@@]1(C)COC2=CC3=C(C=C2)C=CC(=O)O3)CCC(=O)O",
+    "umbelliprenin": r"CC(=CCC/C(=C/CC/C(=C/COC1=CC2=C(C=C1)C=CC(=O)O2)/C)/C)C",
+    "umbelliferone": r"C1=CC(=CC2=C1C=CC(=O)O2)O",
+    "scopoletin": r"COC1=C(C=C2C(=C1)C=CC(=O)O2)O",
+    "imperatorin": r"CC(=CCOC1=C2C(=CC3=C1OC=C3)C=CC(=O)O2)C",
+    "herniarin": r"COC1=CC2=C(C=C1)C=CC(=O)O2",
+    "farnesiferola": r"C[C@@]12CC[C@H](C([C@H]1CCC(=C)[C@@H]2COC3=CC4=C(C=C3)C=CC(=O)O4)(C)C)O",
+    "farnesiferolb": r"C/C(=C\COC1=CC2=C(C=C1)C=CC(=O)O2)/CC[C@@H]3C(=C)CC[C@@H](C3(C)C)O",
+    "farnesiferolc": r"C/C(=C\COC1=CC2=C(C=C1)C=CC(=O)O2)/CC[C@H]3[C@@]4(CC[C@H](C3(C)C)O4)C",
 }
 
 # The first obvious feature to add will be the Molecular Weights (From PubChem)
@@ -176,10 +176,13 @@ data3["Author"] = data3["Author"] + " " + data3["Year"].astype('Int64').astype(s
 data2 = data2[["Author", "Cancer", "CellLine", "Coumarin", "Dose", "Time", "Viability"]]
 data3 = data3[["Author", "Cancer", "CellLine", "Coumarin", "Dose", "Time", "Viability"]]
 
-# Remove the null columns and rows from the datasets
-data2 = data2.dropna(axis=0) # Drop null rows
-data3 = data3.dropna(axis=0) # Drop null rows
-data1 = data1.dropna(axis=1) # Drop null columns
+# Drop null columns
+data1 = data1.dropna(axis=1)
+
+# Drop null rows:
+data1 = data1.dropna(axis=0)
+data2 = data2.dropna(axis=0)
+data3 = data3.dropna(axis=0)
 
 # Concatenate the datasets
 data = pd.concat(objs=[data1, data2, data3], ignore_index=True)
@@ -201,6 +204,10 @@ print()
 
 print("Data2 coumarins:")
 print(data2["Coumarin"].value_counts())
+print(line)
+
+print("Data3 coumarins:")
+print(data3["Coumarin"].value_counts())
 print(line)
 
 # Remove whitespace from the feature names
@@ -245,7 +252,8 @@ def normalize_string(value):
 
     return value
 
-for column in ["Cancer", "CellLine"]:
+# Normalize the categorical (string) features
+for column in ["Cancer", "CellLine", "Coumarin"]:
     data[column] = data[column].map(normalize_string)
 
 # Fix cases where the same cancer has different names
@@ -686,8 +694,8 @@ morgan_cols = data.columns[data.columns.str.startswith("Morgan_")]
 all_zero_morgan = morgan_cols[(data[morgan_cols] == 0).all(axis=0)]
 
 print(f"All-zero Morgan features ({len(all_zero_morgan)}):")
-
 data = data.drop(columns=all_zero_morgan)
+print("The all zero Morgan have been dropped!")
 
 # Check the correlation matrix of the molecular descriptors
 cols = [
@@ -734,20 +742,26 @@ data.to_csv("Data/Processed_Data.csv", index=False)
 print()
 print("Processed data saved to: Data/Processed_Data.csv")
 
-# Make data for classification models as well
-# Class 1 is when viability is between 40 and 60, class 0 is otherwise
+# Make data for classification models
+# Classify Viability into five classes of size 20
 classification_data = data.copy()
 
 classification_data["Viability"] = (
-    (classification_data["Viability"] > 40)
-    & (classification_data["Viability"] < 60)
-).astype(int)
+    np.minimum(
+        np.floor(classification_data["Viability"] / 20).astype(int) + 1,
+        5,
+    )
+)
 
 print()
 print(line)
 
 print("Classification target distribution:")
-print(classification_data["Viability"].value_counts().sort_index())
+print(
+    classification_data["Viability"]
+    .value_counts()
+    .sort_index()
+)
 
 print()
 print("Classification target proportions:")
@@ -763,4 +777,4 @@ classification_data.to_csv(
 )
 
 print()
-print("Classification data saved to: Data/Classification_Data.csv")
+print("Classification data saved to: Data/Five_Class_Classification_Data.csv")

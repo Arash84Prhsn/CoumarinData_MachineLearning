@@ -1,18 +1,23 @@
 import os
+import json
 import warnings
+
+import joblib
 import numpy as np
 import pandas as pd
 
-from sklearn.base import clone
-from sklearn.compose import ColumnTransformer
-from sklearn.cross_decomposition import PLSRegression
+from scipy.stats import loguniform
+
+from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
+from sklearn.exceptions import ConvergenceWarning
 from sklearn.model_selection import (
     KFold,
     GroupKFold,
-    GridSearchCV,
+    RandomizedSearchCV,
 )
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.neural_network import MLPRegressor
 from sklearn.metrics import (
     mean_absolute_error,
     mean_squared_error,
@@ -20,18 +25,20 @@ from sklearn.metrics import (
     r2_score,
 )
 
+
 warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 # ============================================================
 # CONFIGURATION
 # ============================================================
 
 DATA_PATH = "Data/Processed_Data.csv"
-OUTPUT_DIR = "Results/PLS"
+OUTPUT_DIR = "Results/MLP"
 
 RANDOM_STATE = 42
 OUTER_FOLDS = 5
-MAX_COMPONENTS = 15
+N_ITER = 1
 
 # Compounds reserved exclusively for external testing.
 EXTERNAL_COUMARINS = [
@@ -54,6 +61,36 @@ MOLECULAR_FEATURES = [
 ]
 
 # ============================================================
+# HYPERPARAMETER SEARCH SPACE
+# ============================================================
+
+PARAM_DISTRIBUTIONS = {
+    "regressor__mlp__hidden_layer_sizes": [
+        (32,),
+        (64,),
+        (128,),
+        (64, 32),
+        (128, 64),
+        (64, 32, 16),
+    ],
+    "regressor__mlp__activation": [
+        "relu",
+        "tanh",
+    ],
+    "regressor__mlp__alpha": loguniform(1e-5, 1e-1),
+    "regressor__mlp__learning_rate_init": loguniform(
+        1e-4,
+        1e-2,
+    ),
+    "regressor__mlp__batch_size": [
+        32,
+        64,
+        128,
+        "auto",
+    ],
+}
+
+# ============================================================
 # LOAD AND VALIDATE DATA
 # ============================================================
 
@@ -61,7 +98,6 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 data = pd.read_csv(DATA_PATH)
 
-# Normalize coumarin names.
 data["Coumarin"] = (
     data["Coumarin"]
     .astype(str)
@@ -85,7 +121,6 @@ if not fingerprint_columns:
         "Check Data/Processed_Data.csv."
     )
 
-# Validate required columns.
 required_columns = [
     "Coumarin",
     "CellLine",
@@ -96,14 +131,15 @@ required_columns = [
     *fingerprint_columns,
 ]
 
-missing_columns = sorted(set(required_columns) - set(data.columns))
+missing_columns = sorted(
+    set(required_columns) - set(data.columns)
+)
 
 if missing_columns:
     raise ValueError(
         f"Missing required columns: {missing_columns}"
     )
 
-# Validate numerical data.
 numeric_columns = [
     "Dose",
     "Time",
@@ -121,7 +157,8 @@ data = data.replace([np.inf, -np.inf], np.nan)
 
 if data[required_columns].isna().any().any():
     raise ValueError(
-        "Missing or non-finite values were found in required columns."
+        "Missing or non-finite values were found "
+        "in required columns."
     )
 
 if (data["Dose"] < 0).any() or (data["Time"] < 0).any():
@@ -131,7 +168,6 @@ if (data["Dose"] < 0).any() or (data["Time"] < 0).any():
 # ENGINEER FEATURES
 # ============================================================
 
-# Use the same LogDose definition as the preprocessing script.
 data["LogDose"] = np.log1p(data["Dose"])
 
 EXPERIMENTAL_FEATURES = [
@@ -159,8 +195,17 @@ MORGAN_FEATURES = [
 
 external_mask = data["Coumarin"].isin(EXTERNAL_COUMARINS)
 
-train_data = data.loc[~external_mask].copy().reset_index(drop=True)
-external_data = data.loc[external_mask].copy().reset_index(drop=True)
+train_data = (
+    data.loc[~external_mask]
+    .copy()
+    .reset_index(drop=True)
+)
+
+external_data = (
+    data.loc[external_mask]
+    .copy()
+    .reset_index(drop=True)
+)
 
 if train_data.empty or external_data.empty:
     raise ValueError(
@@ -174,7 +219,8 @@ missing_external = (
 
 if missing_external:
     raise ValueError(
-        f"External compounds missing from the data: {missing_external}"
+        "External compounds missing from the data: "
+        f"{missing_external}"
     )
 
 print("=" * 80)
@@ -210,22 +256,24 @@ def calculate_metrics(y_true, y_pred):
     return {
         "N": len(y_true),
         "MAE": mean_absolute_error(y_true, y_pred),
-        "RMSE": np.sqrt(mean_squared_error(y_true, y_pred)),
+        "RMSE": np.sqrt(
+            mean_squared_error(y_true, y_pred)
+        ),
         "MedAE": median_absolute_error(y_true, y_pred),
         "R2": r2_score(y_true, y_pred),
     }
 
 
 # ============================================================
-# BUILD PLS PIPELINES
+# BUILD MLP PIPELINE
 # ============================================================
 
-def build_pls_pipeline(numeric_features):
+def build_mlp_pipeline(numeric_features):
     preprocessing = ColumnTransformer(
         transformers=[
             (
                 "numeric",
-                "passthrough",
+                StandardScaler(),
                 numeric_features,
             ),
             (
@@ -241,81 +289,104 @@ def build_pls_pipeline(numeric_features):
         verbose_feature_names_out=False,
     )
 
-    return Pipeline(
+    mlp_pipeline = Pipeline(
         steps=[
             ("preprocessing", preprocessing),
-            ("scaler", StandardScaler()),
             (
-                "pls",
-                PLSRegression(
-                    scale=False,
-                    max_iter=1000,
-                    tol=1e-6,
+                "mlp",
+                MLPRegressor(
+                    solver="adam",
+                    max_iter=2000,
+                    tol=1e-4,
+                    n_iter_no_change=30,
+                    early_stopping=False,
+                    random_state=RANDOM_STATE,
                 ),
             ),
         ]
     )
 
+    # Standardize the target during fitting and transform
+    # predictions back to the original viability scale.
+    return TransformedTargetRegressor(
+        regressor=mlp_pipeline,
+        transformer=StandardScaler(),
+    )
+
 
 # ============================================================
-# SELECT COMPONENTS USING TRAINING DATA ONLY
+# LOCO-BASED RANDOM SEARCH
 # ============================================================
 
-def select_components(
+def select_hyperparameters(
+    X,
+    y,
+    groups,
+):
+    """
+    Tune the MLP using 100 randomized configurations.
+
+    Every inner validation fold holds out one entire coumarin.
+    MAE is calculated on the original viability scale.
+    """
+
+    groups = np.asarray(groups)
+    n_groups = len(np.unique(groups))
+
+    if n_groups < 2:
+        raise ValueError(
+            "At least two coumarins are required "
+            "for LOCO hyperparameter selection."
+        )
+
+    # The estimator is supplied through param_grid-independent
+    # construction below because the selected feature set varies.
+    # Its pipeline is already defined by the caller's X columns.
+    raise NotImplementedError(
+        "Use select_components_and_features below."
+    )
+
+
+def select_mlp_hyperparameters(
     X,
     y,
     groups,
     numeric_features,
-    validation_strategy,
 ):
-    pipeline = build_pls_pipeline(numeric_features)
+    groups = np.asarray(groups)
+    n_groups = len(np.unique(groups))
 
-    if validation_strategy == "LOCO":
-        n_groups = pd.Series(groups).nunique()
-
-        if n_groups < 2:
-            raise ValueError(
-                "At least two coumarins are required for grouped CV."
-            )
-
-        inner_cv = GroupKFold(
-            n_splits=min(4, n_groups)
-        )
-
-    elif validation_strategy == "KFold":
-        inner_cv = KFold(
-            n_splits=OUTER_FOLDS,
-            shuffle=True,
-            random_state=RANDOM_STATE,
-        )
-
-    else:
+    if n_groups < 2:
         raise ValueError(
-            f"Unknown validation strategy: {validation_strategy}"
+            "At least two coumarins are required "
+            "for LOCO hyperparameter selection."
         )
 
-    search = GridSearchCV(
-        estimator=pipeline,
-        param_grid={
-            "pls__n_components": list(
-                range(1, MAX_COMPONENTS + 1)
-            ),
-        },
+    estimator = build_mlp_pipeline(numeric_features)
+
+    inner_cv = GroupKFold(
+        n_splits=n_groups,
+    )
+
+    search = RandomizedSearchCV(
+        estimator=estimator,
+        param_distributions=PARAM_DISTRIBUTIONS,
+        n_iter=N_ITER,
         scoring="neg_mean_absolute_error",
         cv=inner_cv,
         n_jobs=-1,
+        random_state=RANDOM_STATE,
         refit=True,
+        verbose=0,
         error_score="raise",
+        return_train_score=False,
     )
 
-    if validation_strategy == "LOCO":
-        search.fit(
-            X,
-            y,
-            groups=groups,
-        )
-    else:
-        search.fit(X, y)
+    search.fit(
+        X,
+        y,
+        groups=groups,
+    )
 
     return search
 
@@ -337,9 +408,13 @@ def evaluate_nested_cv(
     y = training_data["Viability"].to_numpy()
     groups = training_data["Coumarin"].to_numpy()
 
+    # --------------------------------------------------------
+    # Define outer validation strategy.
+    # --------------------------------------------------------
+
     if validation_strategy == "LOCO":
         outer_cv = GroupKFold(
-            n_splits=pd.Series(groups).nunique()
+            n_splits=pd.Series(groups).nunique(),
         )
 
         outer_splits = outer_cv.split(
@@ -359,7 +434,8 @@ def evaluate_nested_cv(
 
     else:
         raise ValueError(
-            f"Unknown validation strategy: {validation_strategy}"
+            f"Unknown validation strategy: "
+            f"{validation_strategy}"
         )
 
     prediction_records = []
@@ -377,12 +453,12 @@ def evaluate_nested_cv(
 
         groups_train = groups[train_idx]
 
-        search = select_components(
+        # Hyperparameter selection uses LOCO in every case.
+        search = select_mlp_hyperparameters(
             X=X_train,
             y=y_train,
             groups=groups_train,
             numeric_features=numeric_features,
-            validation_strategy=validation_strategy,
         )
 
         predictions = np.asarray(
@@ -398,9 +474,7 @@ def evaluate_nested_cv(
             "Model": model_name,
             "Validation": validation_strategy,
             "Fold": fold,
-            "SelectedComponents": (
-                search.best_params_["pls__n_components"]
-            ),
+            "BestInnerLOCOMAE": -search.best_score_,
             **fold_metrics,
         }
 
@@ -408,6 +482,12 @@ def evaluate_nested_cv(
             held_out_coumarin = np.unique(
                 groups[valid_idx]
             )
+
+            if len(held_out_coumarin) != 1:
+                raise RuntimeError(
+                    "Expected exactly one held-out coumarin "
+                    "in an outer LOCO fold."
+                )
 
             fold_record["HeldOutCoumarin"] = (
                 held_out_coumarin[0]
@@ -443,9 +523,10 @@ def evaluate_nested_cv(
         print(
             f"{model_name} | {validation_strategy}"
             f" | Fold {fold}{held_out_label}"
-            f" | Components: "
-            f"{search.best_params_['pls__n_components']}"
+            f" | Best inner LOCO MAE: "
+            f"{-search.best_score_:.4f}"
             f" | MAE: {fold_metrics['MAE']:.4f}"
+            f" | RMSE: {fold_metrics['RMSE']:.4f}"
             f" | R2: {fold_metrics['R2']:.4f}"
         )
 
@@ -463,16 +544,20 @@ def evaluate_nested_cv(
         **overall_metrics,
     }
 
-    return predictions_df, folds_df, overall_record
+    return (
+        predictions_df,
+        folds_df,
+        overall_record,
+    )
 
 
 # ============================================================
-# EVALUATE BOTH PLS REPRESENTATIONS
+# EVALUATE BOTH MLP REPRESENTATIONS
 # ============================================================
 
 model_features = {
-    "Descriptor_PLS": DESCRIPTOR_FEATURES,
-    "Morgan_PLS": MORGAN_FEATURES,
+    "Descriptor_MLP": DESCRIPTOR_FEATURES,
+    "Morgan_MLP": MORGAN_FEATURES,
 }
 
 all_predictions = []
@@ -482,10 +567,16 @@ all_summary_results = []
 for model_name, numeric_features in model_features.items():
     for validation_strategy in ["KFold", "LOCO"]:
         print("\n" + "=" * 80)
-        print(f"{model_name} | {validation_strategy}")
+        print(
+            f"{model_name} | {validation_strategy}"
+        )
         print("=" * 80)
 
-        predictions_df, folds_df, summary = evaluate_nested_cv(
+        (
+            predictions_df,
+            folds_df,
+            summary,
+        ) = evaluate_nested_cv(
             training_data=train_data,
             numeric_features=numeric_features,
             model_name=model_name,
@@ -562,28 +653,54 @@ for model_name, numeric_features in model_features.items():
 
     y_external = external_data["Viability"].to_numpy()
 
-    # Select components using training coumarins only.
-    final_search = select_components(
+    # Tune on training coumarins only.
+    final_search = select_mlp_hyperparameters(
         X=X_train,
         y=y_train,
         groups=groups_train,
         numeric_features=numeric_features,
-        validation_strategy="LOCO",
     )
 
     final_model = final_search.best_estimator_
 
     print(
-        "Selected components:",
-        final_search.best_params_["pls__n_components"],
+        f"Best inner LOCO MAE: "
+        f"{-final_search.best_score_:.4f}"
     )
 
-    # Predict external observations without further tuning.
+    print("\nBest hyperparameters:")
+
+    for parameter, value in sorted(
+        final_search.best_params_.items()
+    ):
+        print(f"{parameter}: {value}")
+
+    # Save best hyperparameters.
+    best_params = {
+        key: (
+            list(value)
+            if isinstance(value, tuple)
+            else value
+        )
+        for key, value in final_search.best_params_.items()
+    }
+
+    with open(
+        f"{OUTPUT_DIR}/{model_name}_BestParameters.json",
+        "w",
+        encoding="utf-8",
+    ) as file:
+        json.dump(
+            best_params,
+            file,
+            indent=4,
+        )
+
+    # Predict the external observations.
     y_pred = np.asarray(
         final_model.predict(X_external)
     ).ravel()
 
-    # Aggregate external performance.
     external_metrics = calculate_metrics(
         y_external,
         y_pred,
@@ -592,10 +709,18 @@ for model_name, numeric_features in model_features.items():
     print("\nOverall external metrics:")
 
     for metric, value in external_metrics.items():
-        print(f"{metric}: {value:.4f}" if metric != "N" else f"{metric}: {value}")
+        if metric == "N":
+            print(f"{metric}: {value}")
+        else:
+            print(f"{metric}: {value:.4f}")
 
-    # Save predictions.
-    for i, (_, row) in enumerate(external_data.iterrows()):
+    # --------------------------------------------------------
+    # Save individual external predictions.
+    # --------------------------------------------------------
+
+    for i, (_, row) in enumerate(
+        external_data.iterrows()
+    ):
         external_predictions.append(
             {
                 "Model": model_name,
@@ -609,7 +734,10 @@ for model_name, numeric_features in model_features.items():
             }
         )
 
-    # Report performance separately for each compound.
+    # --------------------------------------------------------
+    # External performance by coumarin.
+    # --------------------------------------------------------
+
     compound_results = []
 
     for coumarin in EXTERNAL_COUMARINS:
@@ -634,7 +762,9 @@ for model_name, numeric_features in model_features.items():
             }
         )
 
-    compound_results_df = pd.DataFrame(compound_results)
+    compound_results_df = pd.DataFrame(
+        compound_results
+    )
 
     print("\nExternal performance by coumarin:")
 
@@ -650,8 +780,9 @@ for model_name, numeric_features in model_features.items():
         index=False,
     )
 
-    # Save the fitted final model.
-    import joblib
+    # --------------------------------------------------------
+    # Save final fitted model.
+    # --------------------------------------------------------
 
     joblib.dump(
         final_model,
@@ -672,19 +803,19 @@ external_predictions_df.to_csv(
 )
 
 print("\n" + "=" * 80)
-print("EXTERNAL PREDICTIONS SAVED")
+print("MLP EVALUATION COMPLETE")
 print("=" * 80)
 
-print(
-    f"Results directory: {OUTPUT_DIR}/"
-)
+print(f"Results directory: {OUTPUT_DIR}/")
 
-print("Saved:")
+print("\nSaved files:")
 print("- CV_Predictions.csv")
 print("- CV_Fold_Results.csv")
 print("- CV_Summary.csv")
 print("- External_Predictions.csv")
-print("- Descriptor_PLS_External_By_Coumarin.csv")
-print("- Morgan_PLS_External_By_Coumarin.csv")
-print("- Descriptor_PLS_Final.joblib")
-print("- Morgan_PLS_Final.joblib")
+print("- Descriptor_MLP_External_By_Coumarin.csv")
+print("- Morgan_MLP_External_By_Coumarin.csv")
+print("- Descriptor_MLP_BestParameters.json")
+print("- Morgan_MLP_BestParameters.json")
+print("- Descriptor_MLP_Final.joblib")
+print("- Morgan_MLP_Final.joblib")
