@@ -26,9 +26,11 @@ GROUP_COLUMN = "Coumarin"
 CELL_LINE_COLUMN = "CellLine"
 
 DEFAULT_N_SPLITS = 5
-DEFAULT_N_ITER = 100
+DEFAULT_N_ITER = 200
 DEFAULT_COVERAGE_THRESHOLDS = [25, 50, 75, 100]
 DEFAULT_MIN_TRAINING_COUMARINS = 4
+
+TRIANGLES = "\u001b[32m\u001b[1m" + "▶▶▶▶" + "\u001b[0m\u001b[22m"
 
 MOLECULAR_FEATURES = [
     "MW",
@@ -353,7 +355,6 @@ def calculate_training_coverage(training_data):
 
     return coverage
 
-
 def evaluate_external_model(
     model,
     training_data,
@@ -438,14 +439,37 @@ def evaluate_external_model(
             )
             coverage_by_coumarin.append(compound_metrics)
 
+    coverage_by_coumarin_results = pd.DataFrame(coverage_by_coumarin)
+
+    if coverage_by_coumarin_results.empty:
+        coverage_by_coumarin_results = pd.DataFrame(
+            columns=[
+                GROUP_COLUMN,
+                "N",
+                "MAE",
+                "RMSE",
+                "MedAE",
+                "R2",
+                "MinimumTrainingObservations",
+                "MinimumTrainingCoumarins",
+            ]
+        )
+    else:
+        coverage_by_coumarin_results = (
+            coverage_by_coumarin_results
+            .sort_values(
+                [GROUP_COLUMN, "MinimumTrainingObservations"]
+            )
+            .reset_index(drop=True)
+        )
+
     return {
         "Overall": overall_results,
         "ByCoumarin": by_coumarin_results,
         "CoverageSummary": pd.DataFrame(coverage_summary),
-        "CoverageByCoumarin": pd.DataFrame(coverage_by_coumarin).sort_values(['Coumarin', 'MinimumTrainingObservations']),
+        "CoverageByCoumarin": coverage_by_coumarin_results,
         "ExternalPredictions": external_predictions,
     }
-
 
 def save_model_results(
     results,
@@ -454,35 +478,49 @@ def save_model_results(
     best_parameters=None,
     fitted_model=None,
 ):
-    output_directory = Path(output_directory)
-    output_directory.mkdir(parents=True, exist_ok=True)
+    config_directory = Path(output_directory) / model_name
 
-    for name, result in results.items():
-        if isinstance(result, pd.DataFrame):
-            result.to_csv(
-                output_directory / f"{model_name}_{name}.csv",
-                index=False,
-            )
+    directories = {
+        "predictions": config_directory / "External Prediction Results",
+        "metrics": config_directory / "External Metric Results",
+        "search": config_directory / "Random Search Results",
+        "models": config_directory / "Model Files",
+        "other": config_directory / "Other Results",
+    }
+
+    for directory in directories.values():
+        directory.mkdir(parents=True, exist_ok=True)
+
+    for name, dataframe in results.items():
+        if not isinstance(dataframe, pd.DataFrame):
+            continue
+
+        if name.startswith("ExternalPredictions"):
+            directory = directories["predictions"]
+        elif name.startswith("External_"):
+            directory = directories["metrics"]
+        elif name in {"CVResults", "CVFoldResults"}:
+            directory = directories["search"]
+        else:
+            directory = directories["other"]
+
+        dataframe.to_csv(directory / f"{name}.csv", index=False)
 
     if best_parameters is not None:
         with open(
-            output_directory / f"{model_name}_BestParameters.json",
+            directories["search"] / "BestParameters.json",
             "w",
             encoding="utf-8",
         ) as file:
-            json.dump(
-                best_parameters,
-                file,
-                indent=4,
-                ensure_ascii=False,
-                default=str,
-            )
+            json.dump(best_parameters, file, indent=4, default=str)
 
     if fitted_model is not None:
         joblib.dump(
             fitted_model,
-            output_directory / f"{model_name}.joblib",
+            directories["models"] / f"{model_name}.joblib",
         )
+
+    print(f"\n{TRIANGLES} Results saved to: {config_directory}")
         
 def print_dataframe(df: pd.DataFrame):
     print(tabulate(df, headers='keys', tablefmt='rounded_grid'))
@@ -498,3 +536,587 @@ def build_scaled_preprocessor(features):
         ],
         remainder="drop",
     )
+
+def plot_model_performance(model_name: str) -> None:
+    """
+    Generate external-evaluation plots for a regression model.
+
+    Main clustered bar plots:
+        - External MAE by coumarin, LOCO only.
+        - External R2 by coumarin, LOCO only.
+        - Separate Descriptor and Morgan plots.
+
+    Additional plots:
+        - Descriptor vs Morgan comparisons for KFold and LOCO.
+        - CellLine-Coumarin MAE heatmaps, saved without displaying them.
+
+    All plots are saved under:
+        Results/Regression/<model_name>/Performance Plots/
+    """
+    import re
+
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import pandas as pd
+
+    results_directory = RESULTS_DIR / "Regression" / model_name
+    plots_directory = results_directory / "Performance Plots"
+
+    coumarin_plots_directory = plots_directory / "Coumarin Comparisons"
+    descriptor_morgan_directory = plots_directory / "Descriptor vs Morgan"
+    heatmaps_directory = plots_directory / "CellLine Coumarin Heatmaps"
+
+    for directory in [
+        coumarin_plots_directory,
+        descriptor_morgan_directory,
+        heatmaps_directory,
+    ]:
+        directory.mkdir(parents=True, exist_ok=True)
+
+    print(
+        f"\n{'=' * 70}\n"
+        f"GENERATING PERFORMANCE PLOTS | {model_name}\n"
+        f"{'=' * 70}"
+    )
+
+    coumarin_results = []
+    cell_line_coumarin_results = []
+
+    # ============================================================
+    # 1. LOAD EXTERNAL METRIC RESULTS
+    # ============================================================
+
+    for csv_path in results_directory.rglob("*.csv"):
+
+        if "Performance Plots" in csv_path.parts:
+            continue
+
+        if "External Metric Results" not in csv_path.parts:
+            continue
+
+        try:
+            df = pd.read_csv(csv_path)
+        except (OSError, pd.errors.ParserError):
+            continue
+
+        relative_parts = csv_path.relative_to(results_directory).parts
+
+        metric_directory_index = relative_parts.index(
+            "External Metric Results"
+        )
+
+        configuration_parts = relative_parts[:metric_directory_index]
+
+        if not configuration_parts:
+            continue
+
+        configuration_name = configuration_parts[-1]
+
+        if configuration_name not in {
+            "KFold_Descriptor",
+            "KFold_Morgan",
+            "LOCO_Descriptor",
+            "LOCO_Morgan",
+        }:
+            continue
+
+        validation, feature_set = configuration_name.split(
+            "_",
+            maxsplit=1,
+        )
+
+        if len(configuration_parts) == 1:
+            experiment = "AllTrainingCoumarins"
+        else:
+            experiment = " | ".join(configuration_parts[:-1])
+
+        model_label = (
+            f"{experiment} | {validation} | {feature_set}"
+        )
+
+        # --------------------------------------------------------
+        # External metrics grouped by coumarin
+        # --------------------------------------------------------
+
+        if (
+            "Coumarin" in df.columns
+            and "MAE" in df.columns
+            and "CellLine" not in df.columns
+            and "Coverage" not in csv_path.stem
+            and "ByCoumarin" in csv_path.stem
+        ):
+            result = df.copy()
+
+            result["Experiment"] = experiment
+            result["Validation"] = validation
+            result["FeatureSet"] = feature_set
+            result["Model"] = model_label
+
+            coumarin_results.append(result)
+
+        # --------------------------------------------------------
+        # External metrics grouped by CellLine + Coumarin
+        # --------------------------------------------------------
+
+        if (
+            {"CellLine", "Coumarin", "MAE"}.issubset(df.columns)
+            and "CellLineCoumarin" in csv_path.stem
+        ):
+            result = df[
+                ["CellLine", "Coumarin", "MAE"]
+            ].copy()
+
+            result["Experiment"] = experiment
+            result["Validation"] = validation
+            result["FeatureSet"] = feature_set
+            result["Model"] = model_label
+
+            cell_line_coumarin_results.append(result)
+
+    if not coumarin_results:
+        print(
+            f"\n{TRIANGLES} No external by-coumarin metric files found."
+        )
+        print("Check the saved filenames and output directories.")
+        return
+
+    coumarin_df = pd.concat(
+        coumarin_results,
+        ignore_index=True,
+    )
+
+    for metric in ["MAE", "R2"]:
+        if metric in coumarin_df.columns:
+            coumarin_df[metric] = pd.to_numeric(
+                coumarin_df[metric],
+                errors="coerce",
+            )
+
+    # ============================================================
+    # 2. MAIN CLUSTERED BAR PLOTS
+    #    LOCO only; separate Descriptor and Morgan plots
+    #    Metrics: MAE and R2
+    # ============================================================
+
+    for metric in ["MAE", "R2"]:
+
+        if metric not in coumarin_df.columns:
+            continue
+
+        for feature_set in ["Descriptor", "Morgan"]:
+
+            feature_data = coumarin_df[
+                (coumarin_df["FeatureSet"] == feature_set)
+                & (coumarin_df["Validation"] == "LOCO")
+            ].copy()
+
+            feature_data = feature_data.dropna(
+                subset=["Coumarin", metric]
+            )
+
+            if feature_data.empty:
+                continue
+
+            pivot = feature_data.pivot_table(
+                index="Coumarin",
+                columns="Model",
+                values=metric,
+                aggfunc="mean",
+            )
+
+            # MAE: lower is better.
+            # R2: higher is better.
+            pivot = pivot.loc[
+                pivot.mean(axis=1).sort_values(
+                    ascending=(metric == "MAE")
+                ).index
+            ]
+
+            fig, ax = plt.subplots(
+                figsize=(max(12, len(pivot) * 2.2), 8)
+            )
+
+            pivot.plot(
+                kind="bar",
+                ax=ax,
+                width=0.78,
+                edgecolor="#303030",
+                linewidth=0.7,
+                alpha=0.92,
+            )
+
+            direction = (
+                "lower is better"
+                if metric == "MAE"
+                else "higher is better"
+            )
+
+            ax.set_title(
+                f"External {metric} by Coumarin — "
+                f"{feature_set} Models (LOCO)",
+                fontsize=15,
+                fontweight="bold",
+                pad=16,
+            )
+
+            ax.set_xlabel(
+                "External Coumarin",
+                fontsize=11,
+                labelpad=10,
+            )
+
+            ax.set_ylabel(
+                f"{metric} ({direction})",
+                fontsize=11,
+                labelpad=10,
+            )
+
+            # Subtle horizontal gridlines behind the bars.
+            ax.set_axisbelow(True)
+
+            ax.grid(
+                axis="y",
+                linestyle="--",
+                linewidth=0.6,
+                alpha=0.35,
+            )
+
+            # Remove unnecessary borders.
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+            ax.spines["left"].set_alpha(0.4)
+            ax.spines["bottom"].set_alpha(0.4)
+
+            ax.tick_params(
+                axis="both",
+                labelsize=10,
+            )
+
+            ax.tick_params(
+                axis="x",
+                rotation=25,
+            )
+
+            # Add numerical labels above bars.
+            for container in ax.containers:
+
+                labels = [
+                    f"{bar.get_height():.2f}"
+                    if np.isfinite(bar.get_height())
+                    else ""
+                    for bar in container
+                ]
+
+                ax.bar_label(
+                    container,
+                    labels=labels,
+                    padding=3,
+                    fontsize=8,
+                    rotation=90,
+                )
+
+            ax.legend(
+                title="Experiment | Validation | Features",
+                bbox_to_anchor=(1.02, 1),
+                loc="upper left",
+                frameon=False,
+            )
+
+            fig.tight_layout()
+
+            fig.savefig(
+                coumarin_plots_directory
+                / (
+                    f"External_{metric}_by_Coumarin_"
+                    f"{feature_set}_LOCO.png"
+                ),
+                dpi=300,
+                bbox_inches="tight",
+            )
+
+            plt.show()
+            plt.close(fig)
+
+    # ============================================================
+    # 3. DESCRIPTOR VS MORGAN COMPARISONS
+    #    Both KFold and LOCO; metrics: MAE and R2
+    # ============================================================
+
+    for metric in ["MAE", "R2"]:
+
+        if metric not in coumarin_df.columns:
+            continue
+
+        for experiment in coumarin_df["Experiment"].unique():
+
+            for validation in ["KFold", "LOCO"]:
+
+                comparison_data = coumarin_df[
+                    (coumarin_df["Experiment"] == experiment)
+                    & (coumarin_df["Validation"] == validation)
+                ].copy()
+
+                descriptor_data = comparison_data[
+                    comparison_data["FeatureSet"] == "Descriptor"
+                ]
+
+                morgan_data = comparison_data[
+                    comparison_data["FeatureSet"] == "Morgan"
+                ]
+
+                if descriptor_data.empty or morgan_data.empty:
+                    continue
+
+                common_coumarins = sorted(
+                    set(descriptor_data["Coumarin"])
+                    & set(morgan_data["Coumarin"])
+                )
+
+                if not common_coumarins:
+                    continue
+
+                paired_data = comparison_data[
+                    comparison_data["Coumarin"].isin(common_coumarins)
+                ].dropna(subset=[metric])
+
+                pivot = paired_data.pivot_table(
+                    index="Coumarin",
+                    columns="FeatureSet",
+                    values=metric,
+                    aggfunc="mean",
+                )
+
+                if not {"Descriptor", "Morgan"}.issubset(
+                    pivot.columns
+                ):
+                    continue
+
+                pivot = pivot[["Descriptor", "Morgan"]]
+
+                pivot["_MeanMetric"] = pivot.mean(axis=1)
+
+                pivot = pivot.sort_values(
+                    "_MeanMetric",
+                    ascending=(metric == "MAE"),
+                ).drop(columns="_MeanMetric")
+
+                fig, ax = plt.subplots(
+                    figsize=(max(10, len(pivot) * 1.8), 7)
+                )
+
+                pivot.plot(
+                    kind="bar",
+                    ax=ax,
+                    width=0.72,
+                    edgecolor="#303030",
+                    linewidth=0.7,
+                    alpha=0.92,
+                )
+
+                direction = (
+                    "lower is better"
+                    if metric == "MAE"
+                    else "higher is better"
+                )
+
+                ax.set_title(
+                    f"Descriptor vs Morgan — {metric}\n"
+                    f"{experiment} | {validation}",
+                    fontsize=14,
+                    fontweight="bold",
+                    pad=16,
+                )
+
+                ax.set_xlabel(
+                    "External Coumarin",
+                    fontsize=11,
+                    labelpad=10,
+                )
+
+                ax.set_ylabel(
+                    f"{metric} ({direction})",
+                    fontsize=11,
+                    labelpad=10,
+                )
+
+                ax.set_axisbelow(True)
+
+                ax.grid(
+                    axis="y",
+                    linestyle="--",
+                    linewidth=0.6,
+                    alpha=0.35,
+                )
+
+                ax.spines["top"].set_visible(False)
+                ax.spines["right"].set_visible(False)
+                ax.spines["left"].set_alpha(0.4)
+                ax.spines["bottom"].set_alpha(0.4)
+
+                ax.tick_params(
+                    axis="both",
+                    labelsize=10,
+                )
+
+                ax.tick_params(
+                    axis="x",
+                    rotation=25,
+                )
+
+                for container in ax.containers:
+
+                    labels = [
+                        f"{bar.get_height():.2f}"
+                        if np.isfinite(bar.get_height())
+                        else ""
+                        for bar in container
+                    ]
+
+                    ax.bar_label(
+                        container,
+                        labels=labels,
+                        padding=3,
+                        fontsize=9,
+                    )
+
+                ax.legend(
+                    title="Feature Set",
+                    frameon=False,
+                )
+
+                fig.tight_layout()
+
+                safe_experiment = re.sub(
+                    r"[^A-Za-z0-9]+",
+                    "_",
+                    experiment,
+                ).strip("_")
+
+                fig.savefig(
+                    descriptor_morgan_directory
+                    / (
+                        f"Descriptor_vs_Morgan_{metric}_"
+                        f"{safe_experiment}_{validation}.png"
+                    ),
+                    dpi=300,
+                    bbox_inches="tight",
+                )
+
+                plt.show()
+                plt.close(fig)
+
+    # ============================================================
+    # 4. CELL LINE + COUMARIN MAE HEATMAPS
+    #    Save only; do not display
+    # ============================================================
+
+    if cell_line_coumarin_results:
+
+        cell_line_coumarin_df = pd.concat(
+            cell_line_coumarin_results,
+            ignore_index=True,
+        )
+
+        cell_line_coumarin_df["MAE"] = pd.to_numeric(
+            cell_line_coumarin_df["MAE"],
+            errors="coerce",
+        )
+
+        cell_line_coumarin_df = cell_line_coumarin_df.dropna(
+            subset=["MAE"]
+        )
+
+        for model_label, model_data in (
+            cell_line_coumarin_df.groupby("Model")
+        ):
+
+            heatmap_data = model_data.pivot_table(
+                index="CellLine",
+                columns="Coumarin",
+                values="MAE",
+                aggfunc="mean",
+            )
+
+            if heatmap_data.empty:
+                continue
+
+            fig, ax = plt.subplots(
+                figsize=(
+                    max(8, len(heatmap_data.columns) * 2),
+                    max(6, len(heatmap_data.index) * 0.45),
+                )
+            )
+
+            heatmap_values = heatmap_data.to_numpy(dtype=float)
+
+            image = ax.imshow(
+                heatmap_values,
+                aspect="auto",
+                interpolation="nearest",
+            )
+
+            ax.set_xticks(
+                np.arange(len(heatmap_data.columns))
+            )
+
+            ax.set_xticklabels(
+                heatmap_data.columns,
+                rotation=35,
+                ha="right",
+            )
+
+            ax.set_yticks(
+                np.arange(len(heatmap_data.index))
+            )
+
+            ax.set_yticklabels(heatmap_data.index)
+
+            ax.set_title(
+                f"External MAE by Cell Line and Coumarin\n"
+                f"{model_label}",
+                fontsize=12,
+                fontweight="bold",
+                pad=12,
+            )
+
+            ax.set_xlabel("External Coumarin")
+            ax.set_ylabel("Cell Line")
+
+            colorbar = fig.colorbar(image, ax=ax)
+            colorbar.set_label("MAE (lower is better)")
+
+            for row in range(heatmap_values.shape[0]):
+                for col in range(heatmap_values.shape[1]):
+
+                    value = heatmap_values[row, col]
+
+                    if np.isfinite(value):
+                        ax.text(
+                            col,
+                            row,
+                            f"{value:.1f}",
+                            ha="center",
+                            va="center",
+                            fontsize=8,
+                        )
+
+            fig.tight_layout()
+
+            safe_model_label = re.sub(
+                r"[^A-Za-z0-9]+",
+                "_",
+                model_label,
+            ).strip("_")
+
+            fig.savefig(
+                heatmaps_directory
+                / f"External_MAE_{safe_model_label}.png",
+                dpi=300,
+                bbox_inches="tight",
+            )
+
+            # Intentionally do not call plt.show() for heatmaps.
+            plt.close(fig)
+
+    print(f"\n{TRIANGLES} Performance plots saved.")
+    print(f"Plot directory: {plots_directory}")
