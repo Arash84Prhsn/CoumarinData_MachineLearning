@@ -742,39 +742,90 @@ data.to_csv("Data/Processed_Data.csv", index=False)
 print()
 print("Processed data saved to: Data/Processed_Data.csv")
 
-# Make data for classification models
-# Classify Viability into five classes of size 20
-classification_data = data.copy()
+# Make classification for 2 classes
+binary_classification_data = data.copy()
 
-classification_data["Viability"] = (
-    np.minimum(
-        np.floor(classification_data["Viability"] / 20).astype(int) + 1,
-        5,
-    )
-)
+binary_classification_data["Viability"] = (
+(binary_classification_data["Viability"] - 50).abs() <= 10
+).astype(int)
 
 print()
 print(line)
 
-print("Classification target distribution:")
+print("Binary Classification - Target Distribution:")
 print(
-    classification_data["Viability"]
-    .value_counts()
-    .sort_index()
+binary_classification_data["Viability"]
+.value_counts()
+.sort_index()
 )
 
 print()
-print("Classification target proportions:")
+print("Binary Classification - Target Proportions:")
 print(
-    classification_data["Viability"]
-    .value_counts(normalize=True)
-    .sort_index()
-)
-
-classification_data.to_csv(
-    "Data/Classification_Data.csv",
-    index=False,
+binary_classification_data["Viability"]
+.value_counts(normalize=True)
+.sort_index()
 )
 
 print()
-print("Classification data saved to: Data/Five_Class_Classification_Data.csv")
+print("Head of binary classification data:")
+print(tabulate(
+    pd.DataFrame(binary_classification_data["Viability"]).head(),
+    headers='keys',
+    tablefmt="rounded_grid"
+    ))
+
+binary_classification_data.to_csv(
+"Data/Binary_Classification_Data.csv",
+index=False,
+)
+
+print()
+print("Binary classification data saved to: Data/Binary_Classification_Data.csv")
+
+# Make 5 class classification data:
+five_class_classification_data = data.copy()
+
+five_class_classification_data["Viability"] = pd.cut(
+five_class_classification_data["Viability"],
+bins=[-np.inf, 20, 40, 60, 80, np.inf],
+labels=[1, 2, 3, 4, 5],
+right=True,
+).astype("Int64")
+
+print()
+print(line)
+
+print("Five-Class Classification - Target Distribution:")
+print(
+five_class_classification_data["Viability"]
+.value_counts()
+.sort_index()
+)
+
+print()
+print("Five-Class Classification - Target Proportions:")
+print(
+five_class_classification_data["Viability"]
+.value_counts(normalize=True)
+.sort_index()
+)
+
+print()
+print("Head of 5 class classification data:")
+print(tabulate(
+    pd.DataFrame(five_class_classification_data["Viability"]).head(),
+    headers='keys',
+    tablefmt="rounded_grid"
+    ))
+
+five_class_classification_data.to_csv(
+"Data/Five_Class_Classification_Data.csv",
+index=False,
+)
+
+print()
+print(
+"Five-class classification data saved to: "
+"Data/Five_Class_Classification_Data.csv"
+)
