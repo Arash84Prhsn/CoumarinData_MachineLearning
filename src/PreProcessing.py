@@ -1,5 +1,8 @@
 import pandas as pd
 import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from pathlib import Path
 import seaborn as sns
 from tabulate import tabulate
 import matplotlib.pylab as plt
@@ -829,3 +832,426 @@ print(
 "Five-class classification data saved to: "
 "Data/Five_Class_Classification_Data.csv"
 )
+
+# ------------------------------------------------------------
+# PCA EXPLAINED VARIANCE ANALYSIS
+# ------------------------------------------------------------
+
+PCA_OUTPUT_DIRECTORY = Path("Figures/PCA_ExplainedVariance")
+PCA_OUTPUT_DIRECTORY.mkdir(parents=True, exist_ok=True)
+
+morgan_features = list(
+    data.columns[data.columns.str.startswith("Morgan_")]
+)
+experimental_features = ["LogDose", "Time"]
+
+pca_feature_configurations = {
+    "PCA_All_Numerical": (
+        molecular_features + experimental_features + morgan_features
+    ),
+    "PCA_Descriptors_Fingerprints": (
+        molecular_features + morgan_features
+    ),
+    "PCA_Fingerprints": morgan_features,
+}
+
+pca_results = {}
+
+fig, axes = plt.subplots(
+    nrows=2,
+    ncols=3,
+    figsize=(20, 11),
+)
+
+print("\n" + "=" * 100)
+print("PCA EXPLAINED VARIANCE ANALYSIS")
+print("=" * 100)
+
+for column, (configuration, features) in enumerate(
+    pca_feature_configurations.items()
+):
+
+    print("\n" + "-" * 100)
+    print(configuration)
+    print("-" * 100)
+
+    X = data[features].astype(float)
+
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+
+    pca = PCA(svd_solver="full")
+    pca.fit(X_scaled)
+
+    individual_variance = pca.explained_variance_ratio_
+    cumulative_variance = np.cumsum(individual_variance)
+
+    eigenvalues = pca.explained_variance_
+    variance_tolerance = eigenvalues.max() * 1e-12
+
+    effective_components = np.count_nonzero(
+        eigenvalues > variance_tolerance
+    )
+
+    pca_results[configuration] = {
+        "NumberOfFeatures": len(features),
+        "NumberOfSamples": len(X),
+        "EffectiveComponents": effective_components,
+        "IndividualVariance": individual_variance,
+        "CumulativeVariance": cumulative_variance,
+    }
+
+    print("Number of original features:", len(features))
+    print("Number of samples:", len(X))
+    print("Maximum meaningful components:", effective_components)
+
+    print("\nCumulative explained variance:")
+
+    for threshold in [0.80, 0.90, 0.95, 0.99, 1.00]:
+
+        components_required = np.searchsorted(
+            cumulative_variance,
+            threshold,
+        ) + 1
+
+        if components_required <= effective_components:
+            print(
+                f"{threshold:.0%} variance: "
+                f"{components_required} components"
+            )
+        else:
+            print(f"{threshold:.0%} variance: Not reached")
+
+    component_numbers = np.arange(1, len(individual_variance) + 1)
+
+    # --------------------------------------------------------
+    # FIRST ROW: CUMULATIVE EXPLAINED VARIANCE
+    # --------------------------------------------------------
+
+    ax = axes[0, column]
+
+    ax.plot(
+        component_numbers,
+        cumulative_variance,
+        marker="o",
+        markersize=3,
+    )
+
+    ax.axvline(
+        effective_components,
+        linestyle="--",
+        label=f"Effective components: {effective_components}",
+    )
+
+    for threshold in [0.80, 0.90, 0.95, 0.99]:
+        ax.axhline(
+            threshold,
+            linestyle=":",
+            alpha=0.7,
+            label=f"{threshold:.0%} variance",
+        )
+
+    ax.set_title(configuration, fontsize=12)
+    ax.set_xlabel("Number of Principal Components")
+    ax.set_ylabel("Cumulative Explained Variance")
+    ax.set_xlim(0, 32)
+    ax.set_ylim(0, 1.05)
+    ax.grid(alpha=0.3)
+    ax.legend(fontsize=8)
+
+    # --------------------------------------------------------
+    # SECOND ROW: INDIVIDUAL EXPLAINED VARIANCE
+    # --------------------------------------------------------
+
+    ax = axes[1, column]
+
+    ax.plot(
+        component_numbers,
+        individual_variance,
+        color="darkorange",
+        marker="o",
+        markersize=3,
+    )
+
+    ax.axvline(
+        effective_components,
+        color="black",
+        linestyle="--",
+        label=f"Effective components: {effective_components}",
+    )
+
+    ax.set_title(f"{configuration} - Individual", fontsize=12)
+    ax.set_xlabel("Principal Component")
+    ax.set_ylabel("Individual Explained Variance")
+    ax.set_xlim(0, 32)
+    ax.grid(alpha=0.3)
+    ax.legend(fontsize=8)
+
+
+# ------------------------------------------------------------
+# FINALIZE AND SAVE FIGURE
+# ------------------------------------------------------------
+
+fig.suptitle(
+    "PCA Explained Variance Analysis",
+    fontsize=17,
+    fontweight="bold",
+)
+
+plt.tight_layout(rect=[0, 0, 1, 0.95])
+
+plt.savefig(
+    PCA_OUTPUT_DIRECTORY / "PCA_Explained_Variance_Comparison.png",
+    dpi=300,
+    bbox_inches="tight",
+)
+
+plt.show()
+plt.close()
+
+
+# ------------------------------------------------------------
+# SUMMARY
+# ------------------------------------------------------------
+
+pca_summary = pd.DataFrame.from_dict(
+    {
+        configuration: {
+            "Original Features": result["NumberOfFeatures"],
+            "Samples": result["NumberOfSamples"],
+            "Effective Components": result["EffectiveComponents"],
+        }
+        for configuration, result in pca_results.items()
+    },
+    orient="index",
+)
+
+print("\n" + "=" * 100)
+print("PCA SUMMARY")
+print("=" * 100)
+
+print(tabulate(pca_summary, headers="keys", tablefmt="rounded_grid"))
+
+print("\nPCA plot saved to:", PCA_OUTPUT_DIRECTORY)
+
+# ------------------------------------------------------------
+# PCA COMPONENT AVAILABILITY: LOCO AND LOGO
+# ------------------------------------------------------------
+
+from sklearn.model_selection import LeaveOneGroupOut
+
+PCA_GROUPS = {
+    "Group_1": [
+        "auraptene",
+        "umbelliprenin",
+        "imperatorin",
+    ],
+    "Group_2": [
+        "umbelliferone",
+        "herniarin",
+        "scopoletin",
+        "esculetin",
+        "osthole",
+    ],
+    "Group_3": [
+        "galbanicacid",
+        "farnesiferola",
+        "farnesiferolb",
+        "farnesiferolc",
+    ],
+}
+
+PCA_COMPONENT_LIMITS = {
+    "PCA_All_Numerical": 13,
+    "PCA_Descriptors_Fingerprints": 11,
+    "PCA_Fingerprints": 11,
+}
+
+
+def get_effective_pca_components(X):
+    """
+    Calculate the numerical rank of standardized training features.
+
+    The tolerance is consistent with the previous exploratory
+    PCA analysis.
+    """
+
+    X = X.astype(float)
+
+    X_scaled = StandardScaler().fit_transform(X)
+
+    pca = PCA(svd_solver="full")
+    pca.fit(X_scaled)
+
+    eigenvalues = pca.explained_variance_
+
+    if len(eigenvalues) == 0 or eigenvalues.max() == 0:
+        return 0
+
+    tolerance = eigenvalues.max() * 1e-12
+
+    return int(np.count_nonzero(eigenvalues > tolerance))
+
+
+def analyze_pca_fold_components(
+    experiment_name,
+    experiment_data,
+    groups,
+):
+    """
+    Calculate the effective PCA component count for every
+    training fold of an experiment.
+    """
+
+    print("\n" + "=" * 110)
+    print(f"{experiment_name} - PCA COMPONENT AVAILABILITY")
+    print("=" * 110)
+
+    fold_results = []
+
+    logo = LeaveOneGroupOut()
+
+    for fold, (train_indices, test_indices) in enumerate(
+        logo.split(experiment_data, groups=groups),
+        start=1,
+    ):
+
+        train_data = experiment_data.iloc[train_indices]
+
+        left_out_groups = sorted(
+            experiment_data.iloc[test_indices]["Coumarin"].unique()
+        )
+
+        left_out_label = ", ".join(left_out_groups)
+
+        print("\n" + "-" * 100)
+        print(f"Fold {fold}: Left out -> {left_out_label}")
+        print("Training samples:", len(train_data))
+        print("-" * 100)
+
+        fold_result = {
+            "Fold": fold,
+            "LeftOut": left_out_label,
+            "TrainingSamples": len(train_data),
+        }
+
+        for configuration, features in pca_feature_configurations.items():
+
+            X_train = train_data[features]
+
+            effective_components = get_effective_pca_components(
+                X_train
+            )
+
+            maximum_allowed = PCA_COMPONENT_LIMITS[configuration]
+
+            valid_components = min(
+                effective_components,
+                maximum_allowed,
+            )
+
+            fold_result[configuration] = effective_components
+
+            print(
+                f"{configuration:<35}"
+                f"Effective: {effective_components:<5}"
+                f"Maximum allowed: {valid_components}"
+            )
+
+        fold_results.append(fold_result)
+
+    results = pd.DataFrame(fold_results)
+
+    print("\n" + "-" * 110)
+    print(f"{experiment_name} SUMMARY")
+    print("-" * 110)
+
+    print(
+        tabulate(
+            results,
+            headers="keys",
+            tablefmt="rounded_grid",
+            showindex=False,
+        )
+    )
+
+    print("\nMinimum available components across folds:")
+
+    for configuration in pca_feature_configurations:
+
+        minimum_components = results[configuration].min()
+
+        maximum_allowed = PCA_COMPONENT_LIMITS[configuration]
+
+        print(
+            f"{configuration:<35}"
+            f"Minimum effective rank: {minimum_components:<5}"
+            f"Candidate range: 1-{min(minimum_components, maximum_allowed)}"
+        )
+
+    return results
+
+
+# ------------------------------------------------------------
+# LOCO
+# ------------------------------------------------------------
+
+loco_pca_results = analyze_pca_fold_components(
+    experiment_name="LOCO",
+    experiment_data=data.reset_index(drop=True),
+    groups=data["Coumarin"].reset_index(drop=True),
+)
+
+
+# ------------------------------------------------------------
+# LOGO
+# ------------------------------------------------------------
+
+logo_data = data[
+    data["Coumarin"].isin(
+        PCA_GROUPS["Group_1"]
+        + PCA_GROUPS["Group_2"]
+        + PCA_GROUPS["Group_3"]
+    )
+].copy().reset_index(drop=True)
+
+logo_data["CoumarinGroup"] = logo_data["Coumarin"].map(
+    {
+        coumarin: group_name
+        for group_name, coumarins in PCA_GROUPS.items()
+        for coumarin in coumarins
+    }
+)
+
+logo_pca_results = analyze_pca_fold_components(
+    experiment_name="LOGO",
+    experiment_data=logo_data,
+    groups=logo_data["CoumarinGroup"],
+)
+
+
+# ------------------------------------------------------------
+# SAVE RESULTS
+# ------------------------------------------------------------
+
+PCA_COMPONENT_OUTPUT_DIRECTORY = Path(
+    "Figures/PCA_Component_Availability"
+)
+
+PCA_COMPONENT_OUTPUT_DIRECTORY.mkdir(
+    parents=True,
+    exist_ok=True,
+)
+
+loco_pca_results.to_csv(
+    PCA_COMPONENT_OUTPUT_DIRECTORY / "LOCO_PCA_Components.csv",
+    index=False,
+)
+
+logo_pca_results.to_csv(
+    PCA_COMPONENT_OUTPUT_DIRECTORY / "LOGO_PCA_Components.csv",
+    index=False,
+)
+
+print("\nLOCO and LOGO PCA component results saved to:")
+print(PCA_COMPONENT_OUTPUT_DIRECTORY)
